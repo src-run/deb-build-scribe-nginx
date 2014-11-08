@@ -19,7 +19,7 @@ set -e
 NGINX_VERSION=1.7.7
 PCRE_VERSION=8.36
 NGX_PAGESPEED_VERSION=1.9.32.2
-APT_DEPENDS="dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev"
+APT_DEPENDS="dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev"
 
 #
 # Runtime config
@@ -288,3 +288,5 @@ sudo dpkg-buildpackage -b
 #
 
 out_title "Complete!"
+
+out_subtitle "Looking to replace your nginx install with nginx-scribe?" "Run:" "sudo dpkg -r --force-all nginx nginx-common nginx-full nginx-light nginx-extra nginx-scribe" "sudo dpkg -i build/nginx-common_1.7.7-1+trusty0-scribe1_all.deb build/nginx-scribe_1.7.7-1+trusty0-scribe1_amd64.deb"

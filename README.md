@@ -220,9 +220,11 @@ To build the debian packages, simply run
 
 ### Signing
 
-Optionally, if you want to enable proper PGP signing, you must edit [debian/changelog] and 
+Optionally, if you want to enable proper PGP signing, you must edit [debian/changelog](https://github.com/scribenet/nginx-scribe/blob/master/debian/changelog) and 
 prepend a new entry. For example, if you have a PGP secret key attached to 
 `First Last <flast@gmail.com>` you might prepend the following
+
+*(Note: This is only relivant if you plan on uploading the packages to Launchpad.)*
 
 ```
 nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
@@ -232,4 +234,24 @@ nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
   * Another line about the package
 
  -- First Last <flast@gmail.com>  Sat, 08 Nov 2014 01:14:47 -0400
+```
+
+### Installing
+
+To remove your previous install of nginx and install `nginx-scribe`, simply run the following commands
+
+*(Note: The first command will remove your previous nginx packages without removing their dependencies—such as phpmyadmin or other similar packages. Failing to run the second command will leave your system with unresolved dependencies and may result in unexpected behaviour!)*
+
+```
+sudo dpkg -r --force-all \
+  nginx \
+  nginx-common \
+  nginx-full \
+  nginx-light \
+  nginx-extra \
+  nginx-scribe
+
+sudo dpkg -i \
+  build/nginx-common_1.7.7-1+trusty0-scribe*_all.deb \
+  build/nginx-scribe_1.7.7-1+trusty0-scribe*_amd64.deb
 ```
