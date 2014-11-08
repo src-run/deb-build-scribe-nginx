@@ -1,0 +1,6 @@
+/nginx-scribe.sublime-project
+/nginx-scribe.sublime-workspace
+/build
+/patches
+/.fuse*
+*.subl*.tmp
