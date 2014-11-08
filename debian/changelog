@@ -1,4 +1,4 @@
-nginx (1.7.7-1+trusty0-scribe01) trusty; urgency=high
+nginx (1.7.7-1+trusty0-scribe1) trusty; urgency=high
 
   * custom build of Nginx for Scribe Inc; see README.md for details
 

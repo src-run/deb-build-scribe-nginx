@@ -8,11 +8,11 @@ Nginx packages.
 
 ## Packages
 
-Unlike the official Nginx packages, this doesn't compile the `nginx-[light|full|extras]` variants: this create the `nginx-common` package as well as an `nginx-script` package.
+This script builds the latest (mainline) `nginx-[light|full|extras]` variants as well as an additional Scribe Inc specific package: `nginx-scribe`. While the former packages reflect the defaults, the latter package is configured per the following details.
 
 ## Configuration
 
-Below you can find a detailed rundown of enabled/disabled flags as well as the optional upstream Nginx modules and third-party modules compiled in.
+Below you can find a detailed rundown of enabled/disabled flags as well as the optional upstream Nginx modules and third-party modules compiled into `nginx-scribe`.
 
 ### Flags
 
@@ -189,8 +189,47 @@ The following modules are compiled into Nginx with this release:
   Transparent subrequest-based caching layout for arbitrary nginx locations.
 
 
-## Package Requirements
+### Package Requirements
 
-- perl *(>5.6.1)*
-- libreadline-dev
-- libssl-dev
+- `dpkg-dev` 
+- `build-essential` 
+- `zlib1g-dev` 
+- `libpcre3` 
+- `libpcre3-dev` 
+- `unzip`
+- `perl` *(>5.6.1)*
+- `libreadline-dev`
+- `libssl-dev`
+- `libexpat-dev`
+
+## Usage
+
+To build the debian packages, first clone and enter the repository
+
+```
+git clone https://github.com/scribenet/nginx-scribe.git && cd nginx-scribe
+```
+
+### Build
+
+To build the debian packages, simply run
+
+```
+./build.sh
+```
+
+### Signing
+
+Optionally, if you want to enable proper PGP signing, you must edit [debian/changelog] and 
+prepend a new entry. For example, if you have a PGP secret key attached to 
+`First Last <flast@gmail.com>` you might prepend the following
+
+```
+nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
+
+  * Some possible details pertaining to the package
+  * [...]
+  * Another line about the package
+
+ -- First Last <flast@gmail.com>  Sat, 08 Nov 2014 01:14:47 -0400
+```
