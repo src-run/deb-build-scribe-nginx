@@ -169,7 +169,7 @@ out_subtitle "Inserting http://ppa.launchpad.net/nginx/development/ubuntu" "into
 sudo su -c 'echo -e "deb http://ppa.launchpad.net/nginx/development/ubuntu trusty main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu trusty main" > /etc/apt/sources.list.d/nginx-development-trusty.list'
 
 out_subtitle "Running apt-get update"
-#sudo apt-get update
+sudo apt-get update
 
 out_subtitle "Installing apt dependencies"
 sudo apt-get -y install ${APT_DEPENDS}
