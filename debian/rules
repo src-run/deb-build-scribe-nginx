@@ -9,7 +9,7 @@ debian_ldflags:=$(shell dpkg-buildflags --get LDFLAGS)
 DEBIAN_NGINX_PERL_LDFLAGS:= $(debian_ldflags)
 export DEBIAN_NGINX_PERL_LDFLAGS
 
-FLAVOURS := full light extras scribe
+FLAVOURS := scribe full light extras
 
 MODULESDIR = $(CURDIR)/debian/modules
 EXTDEPSDIR = $(CURDIR)/debian/extdeps
@@ -133,6 +133,7 @@ scribe_configure_flags := \
 			--with-http_spdy_module \
 			--with-http_sub_module \
 			--with-http_xslt_module \
+			--add-module=$(MODULESDIR)/ngx_pagespeed-release-beta \
 			--add-module=$(MODULESDIR)/headers-more-nginx-module \
 			--add-module=$(MODULESDIR)/nginx-auth-pam \
 			--add-module=$(MODULESDIR)/nginx-cache-purge \
@@ -143,15 +144,11 @@ scribe_configure_flags := \
 			--add-module=$(MODULESDIR)/nginx-http-push \
 			--add-module=$(MODULESDIR)/nginx-upload-progress \
 			--add-module=$(MODULESDIR)/nginx-upstream-fair \
-			--add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
-			--add-module=$(MODULESDIR)/openresty_set-misc-nginx-module
-			--add-module=$(MODULESDIR)/openresty_array-var-nginx-module
-			--add-module=$(MODULESDIR)/openresty_drizzle-nginx-module
-			--add-module=$(MODULESDIR)/openresty_rds-json-nginx-module
-			--add-module=$(MODULESDIR)/openresty_rds-csv-nginx-module
-			--add-module=$(MODULESDIR)/openresty_memc-nginx-module
+			--add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module \
+			--add-module=$(MODULESDIR)/openresty_set-misc-nginx-module \
+			--add-module=$(MODULESDIR)/openresty_array-var-nginx-module \
+			--add-module=$(MODULESDIR)/openresty_memc-nginx-module \
 			--add-module=$(MODULESDIR)/openresty_srcache-nginx-module
-			--add-module=$(MODULESDIR)/ngx_pagespeed-release-beta
 
 %:
 	dh $@ --with systemd

@@ -212,16 +212,41 @@ git clone https://github.com/scribenet/nginx-scribe.git && cd nginx-scribe
 
 ### Build
 
-To build the debian packages, simply run
+By default both source and binary packages are created by the build script. To run the build process, simple execute the `build.sh` command within the root of this repository.
+
+*(Note: It is important to enter the repository root directory prior to running the build script.)*
 
 ```
+cd /path/to/repo/nginx-scribe
 ./build.sh
 ```
 
-### Signing
+If you would like to change the behaviour of the build script, consult the following sub-sections. For more advanced changes, the build script is well commented *(but proceed at your own risk)*.
 
-Optionally, if you want to enable proper PGP signing, you must edit [debian/changelog](https://github.com/scribenet/nginx-scribe/blob/master/debian/changelog) and 
-prepend a new entry. For example, if you have a PGP secret key attached to 
+#### Packaging Options
+
+In the build script (`build.sh`), within the configuration section near the top, there is a variable named `OPT_DPKG_BUILDPACKAGE` that allows you to change the behaviour of the build process. By default it passes `-F` and `--force-sign` to `dpkg-buildpackage`. 
+
+The most common options you will want to pass are `-F`, `-b`, or `-S`. 
+
+- `-F` *(The default)*
+
+  Specifies a normal full build, binary and source packages will be built.
+  
+- `-b`
+
+  Specifies a binary-only build, no source files are to be built and/or distributed.
+  
+- `S`
+
+  Specifies a source-only build, no binary packages need to be made.
+  
+To investigate other available options to pass, view the main page using `man dpkg-build-package`.
+
+#### Signing
+
+Optionally, if you want to enable proper PGP signing, you must edit [debian/changelog](https://github.com/scribenet/nginx-scribe/blob/master/debian/changelog) and
+prepend a new entry. For example, if you have a PGP secret key attached to
 `First Last <flast@gmail.com>` you might prepend the following
 
 *(Note: This is only relivant if you plan on uploading the packages to Launchpad.)*
@@ -235,6 +260,17 @@ nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
 
  -- First Last <flast@gmail.com>  Sat, 08 Nov 2014 01:14:47 -0400
 ```
+
+**Important**: If you do not plan on signing, you must remove the `--force-sign` option passed to `dpkg-buildpackage` by default. Find the following line
+within `build.sh` under the configuration section
+```
+OPT_DPKG_BUILDPACKAGE="-F --force-sign"
+```
+And modify it to just include the `-F` flag, as such
+```
+OPT_DPKG_BUILDPACKAGE="-F"
+```
+This will allow you to create the packages without signing.
 
 ### Installing
 
