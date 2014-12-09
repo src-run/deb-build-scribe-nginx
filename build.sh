@@ -18,6 +18,9 @@ VER_DEB_NGINX="1.7.7-1+trusty0"
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.2
 
+## Action delay
+ACTION_DELAY=1
+
 ## Strict build dependencies
 APT_DEPS_STRICT="dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
 
@@ -26,24 +29,10 @@ APT_DEPS_DYNAMIC=""
 
 ## Modules to be installed
 MOD_GIT_NAME=(
-    "openresty/headers-more-nginx-module"
-    "openresty/set-misc-nginx-module"
-    "openresty/array-var-nginx-module"
-    "openresty/drizzle-nginx-module"
-    "openresty/rds-json-nginx-module"
-    "openresty/rds-csv-nginx-module"
-    "openresty/memc-nginx-module"
-    "openresty/srcache-nginx-module"
+    "alphashack/nginx_graphdat"
 )
 MOD_GIT_VERSION=(
-    "v0.25"
-    "v0.26"
-    "v0.03"
-    "v0.1.7"
-    "v0.13"
-    "v0.05"
-    "v0.15"
-    "v0.28"
+    "master"
 )
 
 ## Files to create patches against original source
@@ -52,6 +41,7 @@ PATCH_FILES=(
     "debian/control"
     "debian/rules"
     "debian/tests/control"
+    "debian/modules/ngx-fancyindex/ngx_http_fancyindex_module.c"
 )
 
 ## New files to install within original source
@@ -70,7 +60,15 @@ OPT_DPKG_BUILDPACKAGE="-F --force-sign"
 OUT_SLEEP_LEVEL0=6
 OUT_SLEEP_LEVEL1=4
 OUT_SLEEP_LEVEL2=2
-OUT_SLEEP_SUDONOTICE=16
+OUT_SLEEP_SUDONOTICE=12
+
+## Disable output delay handlers
+if [[ "${ACTION_DELAY}" == "0" ]]; then
+    OUT_SLEEP_LEVEL0=0
+    OUT_SLEEP_LEVEL1=0
+    OUT_SLEEP_LEVEL2=0
+    OUT_SLEEP_SUDONOTICE=0
+fi
 
 ## Directory structure
 DIR_ROOT="$(pwd)"
@@ -311,7 +309,8 @@ if [[ -d "${DIR_BUILD}" || -d "${DIR_SELF_PATCHES}" ]]
 then
     # Let the use know befor calling sudo
     out_sudonotice \
-        "rm -fr ${DIR_BUILD}"
+        "rm -fr ${DIR_BUILD}" \
+        "rm -fr ${DIR_SELF_PATCHES}"
 
     # Output info to user
     out_l2 \
@@ -341,7 +340,7 @@ out_sudonotice \
     "sudo su -c 'echo -e 'deb http://ppa.launchpad.net/nginx/development/ubuntu trusty main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu trusty main' > /etc/apt/sources.list.d/nginx-development-trusty.list'" \
     "sudo apt-get update" \
     "sudo apt-get -y install ${APT_DEPS_STRICT}" \
-    "sudo apt-get -y build-dep nginx nginx-light nginx-full nginx-extras nginx-common"
+    "sudo apt-get -y build-dep nginx nginx-extras"
 
 ## Add required PPA
 out_l2 \
@@ -362,7 +361,7 @@ sudo apt-get -y install ${APT_DEPS_STRICT}
 
 ## Handle dynamic dependency installation
 out_line && out_l2 "Installing dynamic build dependencies."
-sudo apt-get -y build-dep nginx-extras
+sudo apt-get -y build-dep nginx nginx-extras
 
 ##
 ## Setup and get Nginx source
@@ -466,6 +465,29 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
         git clone "${item_path_git}" "${item_path_file}" &&
         cd "${item_path_file}" &&
         git checkout "${item_version_git}"
+
+    # Perform submodule init for alphashack/nginx_graphdat
+    if [[ "${item_name_git}" == "alphashack/nginx_graphdat" ]]; then
+
+        # Output empty line
+
+        # Init/update submodule
+        out_l2 \
+            "Addition src actions for ${item_name_git}:" \
+            "  -> git submodule init" \
+            "  -> git submodule update"
+        cd "${DIR_NGINX_MODULES}" &&
+            cd "${item_path_file}" &&
+            git submodule init &&
+            git submodule update
+
+        # Remove binary test files
+        out_line && out_l2 \
+            "Cleaning ${item_name_git} source:" \
+            "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
+        rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
+
+    fi
 
     # Output empty line
     out_line
