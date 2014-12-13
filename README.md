@@ -29,7 +29,8 @@ The following are key configuration items:
   - [`3`] Generate source packages only (and perform the PPA upload automatically)
   
   - [`4`] Perform a test build using SimpleSbuild, a sanitized enviornment similar to the automated builders used by Launchpad.
-  
+
+
 - `BUILD_LAUNCHPAD_URL`
 
   In order to take advantage of build option `3` and have your source files automatically uploaded to Launchpad upon successful source generation, this must be configured to your Laucnhpad PPA path.
