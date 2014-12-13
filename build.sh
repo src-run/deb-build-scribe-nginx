@@ -74,7 +74,6 @@ UPDATE_VER_FILES=(
 )
 
 ## Passed arguments to dpkg-buildpackage
-OPT_DEBUILD="-S -sd -k${BUILD_SIGNING_KEY_ID}"
 OPT_DPKG_BUILDPACKAGE="-F --force-sign -k${BUILD_SIGNING_KEY_ID}"
 OPT_SBUILD="-d ${SBUILD_DIST}"
 
@@ -346,6 +345,15 @@ else
 fi
 
 VER_DEB_NGINX="1.7.7-1+${NAM_BUILD_UBUNTU}0"
+
+if [[ "${NAM_BUILD_UBUNTU}" == "trusty" ]]
+then
+    ## Include original source for trusty builds
+    OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
+else
+    ## Newer builds don't need the source
+    OPT_DEBUILD="-S -sd -k${BUILD_SIGNING_KEY_ID}"
+fi
 
 ##
 ## Cleanup (from previous builds)
