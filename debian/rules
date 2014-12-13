@@ -9,10 +9,12 @@ debian_ldflags:=$(shell dpkg-buildflags --get LDFLAGS)
 DEBIAN_NGINX_PERL_LDFLAGS:= $(debian_ldflags)
 export DEBIAN_NGINX_PERL_LDFLAGS
 
-FLAVOURS := scribe full light extras
+FLAVOURS := scribe
 
 MODULESDIR = $(CURDIR)/debian/modules
 EXTDEPSDIR = $(CURDIR)/debian/extdeps
+NPS_VERSION = %VER_NGX_MOD_PAGESPEED%
+PCRE_VERSION = %VER_PCRE%
 BASEDIR = $(CURDIR)
 $(foreach flavour,$(FLAVOURS),$(eval BUILDDIR_$(flavour) = $(CURDIR)/debian/build-$(flavour)))
 
@@ -28,108 +30,108 @@ endif
 
 # configure flags
 common_configure_flags := \
-			--with-cc-opt="$(debian_cflags)" \
-			--with-ld-opt="$(debian_ldflags)" \
-			--prefix=/usr/share/nginx \
-			--conf-path=/etc/nginx/nginx.conf \
-			--http-log-path=/var/log/nginx/access.log \
-			--error-log-path=/var/log/nginx/error.log \
-			--lock-path=/var/lock/nginx.lock \
-			--pid-path=/run/nginx.pid \
-			--http-client-body-temp-path=/var/lib/nginx/body \
-			--http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
-			--http-proxy-temp-path=/var/lib/nginx/proxy \
-			--http-scgi-temp-path=/var/lib/nginx/scgi \
-			--http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
-			--with-debug \
-			--with-pcre-jit \
-			--with-ipv6 \
-			--with-http_ssl_module \
-			--with-http_stub_status_module \
-			--with-http_realip_module \
-			--with-http_auth_request_module
+					   --with-cc-opt="$(debian_cflags)" \
+					   --with-ld-opt="$(debian_ldflags)" \
+					   --prefix=/usr/share/nginx \
+					   --conf-path=/etc/nginx/nginx.conf \
+					   --http-log-path=/var/log/nginx/access.log \
+					   --error-log-path=/var/log/nginx/error.log \
+					   --lock-path=/var/lock/nginx.lock \
+					   --pid-path=/run/nginx.pid \
+					   --http-client-body-temp-path=/var/lib/nginx/body \
+					   --http-fastcgi-temp-path=/var/lib/nginx/fastcgi \
+					   --http-proxy-temp-path=/var/lib/nginx/proxy \
+					   --http-scgi-temp-path=/var/lib/nginx/scgi \
+					   --http-uwsgi-temp-path=/var/lib/nginx/uwsgi \
+					   --with-debug \
+					   --with-pcre-jit \
+					   --with-ipv6 \
+					   --with-http_ssl_module \
+					   --with-http_stub_status_module \
+					   --with-http_realip_module \
+					   --with-http_auth_request_module
 
 light_configure_flags := \
-			$(common_configure_flags) \
-			--with-http_gzip_static_module \
-			--without-http_browser_module \
-			--without-http_geo_module \
-			--without-http_limit_req_module \
-			--without-http_limit_zone_module \
-			--without-http_memcached_module \
-			--without-http_referer_module \
-			--without-http_scgi_module \
-			--without-http_split_clients_module \
-			--without-http_ssi_module \
-			--without-http_userid_module \
-			--without-http_uwsgi_module \
-			--add-module=$(MODULESDIR)/nginx-echo
+					  $(common_configure_flags) \
+					  --with-http_gzip_static_module \
+					  --without-http_browser_module \
+					  --without-http_geo_module \
+					  --without-http_limit_req_module \
+					  --without-http_limit_zone_module \
+					  --without-http_memcached_module \
+					  --without-http_referer_module \
+					  --without-http_scgi_module \
+					  --without-http_split_clients_module \
+					  --without-http_ssi_module \
+					  --without-http_userid_module \
+					  --without-http_uwsgi_module \
+					  --add-module=$(MODULESDIR)/nginx-echo
 
 full_configure_flags := \
-			$(common_configure_flags) \
-			--with-http_addition_module \
-			--with-http_dav_module \
-			--with-http_geoip_module \
-			--with-http_gzip_static_module \
-			--with-http_image_filter_module \
-			--with-http_spdy_module \
-			--with-http_sub_module \
-			--with-http_xslt_module \
-			--with-mail \
-			--with-mail_ssl_module \
-			--add-module=$(MODULESDIR)/nginx-auth-pam \
-			--add-module=$(MODULESDIR)/nginx-dav-ext-module \
-			--add-module=$(MODULESDIR)/nginx-echo \
-			--add-module=$(MODULESDIR)/nginx-upstream-fair \
-			--add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
+					 $(common_configure_flags) \
+					 --with-http_addition_module \
+					 --with-http_dav_module \
+					 --with-http_geoip_module \
+					 --with-http_gzip_static_module \
+					 --with-http_image_filter_module \
+					 --with-http_spdy_module \
+					 --with-http_sub_module \
+					 --with-http_xslt_module \
+					 --with-mail \
+					 --with-mail_ssl_module \
+					 --add-module=$(MODULESDIR)/nginx-auth-pam \
+					 --add-module=$(MODULESDIR)/nginx-dav-ext-module \
+					 --add-module=$(MODULESDIR)/nginx-echo \
+					 --add-module=$(MODULESDIR)/nginx-upstream-fair \
+					 --add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
 
 extras_configure_flags := \
-			$(common_configure_flags) \
-			--with-http_addition_module \
-			--with-http_dav_module \
-			--with-http_flv_module \
-			--with-http_geoip_module \
-			--with-http_gzip_static_module \
-			--with-http_image_filter_module \
-			--with-http_mp4_module \
-			--with-http_perl_module \
-			--with-http_random_index_module \
-			--with-http_secure_link_module \
-			--with-http_spdy_module \
-			--with-http_sub_module \
-			--with-http_xslt_module \
-			--with-mail \
-			--with-mail_ssl_module \
-			--add-module=$(MODULESDIR)/headers-more-nginx-module \
-			--add-module=$(MODULESDIR)/nginx-auth-pam \
-			--add-module=$(MODULESDIR)/nginx-cache-purge \
-			--add-module=$(MODULESDIR)/nginx-dav-ext-module \
-			--add-module=$(MODULESDIR)/nginx-development-kit \
-			--add-module=$(MODULESDIR)/nginx-echo \
-			--add-module=$(MODULESDIR)/ngx-fancyindex \
-			--add-module=$(MODULESDIR)/nginx-http-push \
-			--add-module=$(MODULESDIR)/nginx-lua \
-			--add-module=$(MODULESDIR)/nginx-upload-progress \
-			--add-module=$(MODULESDIR)/nginx-upstream-fair \
-			--add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
+					   $(common_configure_flags) \
+					   --with-http_addition_module \
+					   --with-http_dav_module \
+					   --with-http_flv_module \
+					   --with-http_geoip_module \
+					   --with-http_gzip_static_module \
+					   --with-http_image_filter_module \
+					   --with-http_mp4_module \
+					   --with-http_perl_module \
+					   --with-http_random_index_module \
+					   --with-http_secure_link_module \
+					   --with-http_spdy_module \
+					   --with-http_sub_module \
+					   --with-http_xslt_module \
+					   --with-mail \
+					   --with-mail_ssl_module \
+					   --add-module=$(MODULESDIR)/headers-more-nginx-module \
+					   --add-module=$(MODULESDIR)/nginx-auth-pam \
+					   --add-module=$(MODULESDIR)/nginx-cache-purge \
+					   --add-module=$(MODULESDIR)/nginx-dav-ext-module \
+					   --add-module=$(MODULESDIR)/nginx-development-kit \
+					   --add-module=$(MODULESDIR)/nginx-echo \
+					   --add-module=$(MODULESDIR)/ngx-fancyindex \
+					   --add-module=$(MODULESDIR)/nginx-http-push \
+					   --add-module=$(MODULESDIR)/nginx-lua \
+					   --add-module=$(MODULESDIR)/nginx-upload-progress \
+					   --add-module=$(MODULESDIR)/nginx-upstream-fair \
+					   --add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
 
 scribe_configure_flags := \
-			$(common_configure_flags) \
-			--without-poll_module \
-			--without-select_module \
-			--without-http_uwsgi_module \
-			--with-pcre=$(EXTDEPSDIR)/pcre \
-			--with-pcre-jit \
-			--with-file-aio \
-			--with-http_geoip_module \
-			--with-http_spdy_module \
-			--add-module=$(MODULESDIR)/ngx_pagespeed-release-beta \
-                        --add-module=$(MODULESDIR)/alphashack_nginx_graphdat \
-			--add-module=$(MODULESDIR)/nginx-auth-pam \
-			--add-module=$(MODULESDIR)/nginx-cache-purge \
-			--add-module=$(MODULESDIR)/nginx-development-kit \
-			--add-module=$(MODULESDIR)/ngx-fancyindex \
-			--add-module=$(MODULESDIR)/nginx-upload-progress
+					   $(common_configure_flags) \
+					   --without-poll_module \
+					   --without-select_module \
+					   --without-http_uwsgi_module \
+					   --with-pcre=$(EXTDEPSDIR)/pcre-$(PCRE_VERSION) \
+					   --with-pcre-jit \
+					   --with-file-aio \
+					   --with-http_geoip_module \
+					   --with-http_spdy_module \
+					   --add-module=$(MODULESDIR)/ngx_pagespeed-release-beta \
+					   --add-module=$(MODULESDIR)/alphashack_nginx_graphdat \
+					   --add-module=$(MODULESDIR)/nginx-auth-pam \
+					   --add-module=$(MODULESDIR)/nginx-cache-purge \
+					   --add-module=$(MODULESDIR)/nginx-development-kit \
+					   --add-module=$(MODULESDIR)/ngx-fancyindex \
+					   --add-module=$(MODULESDIR)/nginx-upload-progress
 
 %:
 	dh $@ --with systemd
@@ -164,6 +166,9 @@ config.arch.%:
 	cp -Pa $(CURDIR)/contrib $(BUILDDIR_$*)/
 	cp -Pa $(CURDIR)/src $(BUILDDIR_$*)/
 	cp -Pa $(CURDIR)/man $(BUILDDIR_$*)/
+	tar xfz $(MODULESDIR)/ngx_pagespeed-release-beta/$(NPS_VERSION).tar.gz -C $(MODULESDIR)/ngx_pagespeed-release-beta
+	mkdir -p $(EXTDEPSDIR)/pcre-$(PCRE_VERSION)
+	tar xjf $(EXTDEPSDIR)/pcre-$(PCRE_VERSION).tar.bz2 -C $(EXTDEPSDIR)
 	cd $(BUILDDIR_$*) && ./configure $($*_configure_flags)
 
 clean.%:

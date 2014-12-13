@@ -17,11 +17,26 @@ VER_NGINX=1.7.7
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.2
 
+## The GPG key ID to sign the source/binary with, launchpad URL
+BUILD_SIGNING_KEY_ID=313E4FB0
+BUILD_LAUNCHPAD_URL="scribeinc/nginx"
+
+## Sbuild distribution name (assumes sbuild has been configured per
+## instructions at https://wiki.ubuntu.com/SimpleSbuild)
+SBUILD_DIST="utopic-amd64-shm"
+
+## Mode
+## 1=binary and source
+## 2=source only for ppa upload
+## 3=source only and do ppa upload
+## 4=perform test build with sbuild
+BUILD_MODE=3
+
 ## Action delay
-ACTION_DELAY=0
+ACTION_DELAY=1
 
 ## Strict build dependencies
-APT_DEPS_STRICT="dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
+APT_DEPS_STRICT="devscripts dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
 
 ## Automatically populated by inspecting package dependencies at runtime
 APT_DEPS_DYNAMIC=""
@@ -52,14 +67,22 @@ NEW_FILES=(
     "debian/source/include-binaries"
 )
 
+## Files requiring version string updates
+UPDATE_VER_FILES=(
+    "debian/rules"
+    "debian/source/include-binaries"
+)
+
 ## Passed arguments to dpkg-buildpackage
-OPT_DPKG_BUILDPACKAGE="-F --force-sign"
+OPT_DEBUILD="-S -sd -k${BUILD_SIGNING_KEY_ID}"
+OPT_DPKG_BUILDPACKAGE="-F --force-sign -k${BUILD_SIGNING_KEY_ID}"
+OPT_SBUILD="-d ${SBUILD_DIST}"
 
 ## Output handling
 OUT_SLEEP_LEVEL0=2
 OUT_SLEEP_LEVEL1=1
-OUT_SLEEP_LEVEL2=1
-OUT_SLEEP_SUDONOTICE=4
+OUT_SLEEP_LEVEL2=0
+OUT_SLEEP_SUDONOTICE=2
 
 ## Disable output delay handlers
 if [[ "${ACTION_DELAY}" == "0" ]]; then
@@ -315,8 +338,11 @@ else
     out_l2 \
         "You are running a compatable version of Linux:" \
         "  Distribution   -> Ubuntu" \
+        "" \
         "  Version Name   -> ${NAM_BUILD_UBUNTU}" \
-        "  Version Number -> ${VER_BUILD_UBUNTU}"
+        "  Version Number -> ${VER_BUILD_UBUNTU}" \
+        "" \
+        "  Build Type     -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
 VER_DEB_NGINX="1.7.7-1+${NAM_BUILD_UBUNTU}0"
@@ -376,9 +402,14 @@ out_l2 \
 ## Handle adding required PPA
 echo -e "deb http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main" | sudo tee /etc/apt/sources.list.d/nginx-development-sources.list > /dev/null
 
-## Handle apt update
-out_l2 "Adding key and updating apt cache."
-wget -qO - "${KEY_HREF}" | sudo apt-key add -
+## Handle add apt key
+out_l2 \
+    "Adding key:" \
+    "  Key Href -> ${KEY_HREF}"
+echo -en "${KEY_HREF}: " && wget -qO - "${KEY_HREF}" | sudo apt-key add -
+
+## Handle apt cache update
+out_line && out_l2 "Updating apt cache."
 sudo apt-get update
 
 ## Handle pre-defined dependency instalation
@@ -437,7 +468,10 @@ out_l2 \
     "Moving Changelog for Specific Ubuntu Version" \
     "  From -> ${DIR_SELF_PATCHES}/changelog_${NAM_BUILD_UBUNTU}" \
     "  To   -> ${DIR_SELF_PATCHES}/changelog"
-cp "${DIR_SELF_PATCHES}/changelog_${NAM_BUILD_UBUNTU}" > "${DIR_SELF_PATCHES}/changelog"
+cp "${DIR_SELF_DEBIAN}/changelog_${NAM_BUILD_UBUNTU}" "${DIR_SELF_DEBIAN}/changelog"
+
+## Get the scribe build #
+VER_SCR_BUILD="$(cat ${DIR_SELF_DEBIAN}/changelog | head -n 1 | grep -oe "scribe[0-9]*")"
 
 ## For each file we want to patch against source package...
 for patch_file in "${PATCH_FILES[@]}"
@@ -466,6 +500,19 @@ do
         "  File  -> ${DIR_NGINX}/${patch_file}" \
         "  Patch -> ${DIR_SELF_PATCHES}/${patch_file_nodir}"
     patch "${DIR_NGINX}/${patch_file}" < "${DIR_SELF_PATCHES}/${patch_file_nodir}" > /dev/null 2>&1
+done
+
+## Sed to fix s
+for update_ver_file in "${UPDATE_VER_FILES[@]}"
+do
+    out_l2 \
+        "Updating versions:" \
+        "  File                    -> ${DIR_NGINX}/${update_ver_file}" \
+        "  %VER_NGX_MOD_PAGESPEED% -> ${VER_NGX_MOD_PAGESPEED}" \
+        "  %VER_PCRE%              -> ${VER_PCRE}"
+    sed -i "s,%VER_NGX_MOD_PAGESPEED%,${VER_NGX_MOD_PAGESPEED},g" "${DIR_NGINX}/${update_ver_file}"
+    sed -i "s,%VER_PCRE%,${VER_PCRE},g" "${DIR_NGINX}/${update_ver_file}"
+
 done
 
 ##
@@ -505,7 +552,7 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
         # Output empty line
 
         # Init/update submodule
-        out_l2 \
+        out_line && out_l2 \
             "Addition src actions for ${item_name_git}:" \
             "  -> git submodule init" \
             "  -> git submodule update"
@@ -536,7 +583,8 @@ out_l2 \
 cd "${DIR_NGINX_MODULES}" &&
     wget "https://github.com/pagespeed/ngx_pagespeed/archive/release-${VER_NGX_MOD_PAGESPEED}-beta.zip" &&
     unzip "release-${VER_NGX_MOD_PAGESPEED}-beta.zip" &&
-    mv "ngx_pagespeed-release-${VER_NGX_MOD_PAGESPEED}-beta" "ngx_pagespeed-release-beta"
+    mv "ngx_pagespeed-release-${VER_NGX_MOD_PAGESPEED}-beta" "ngx_pagespeed-release-beta" &&
+    rm "release-${VER_NGX_MOD_PAGESPEED}-beta.zip"
 
 ## Output empty line
 out_line
@@ -545,10 +593,9 @@ out_line
 out_l2 "Fetching ngx_pagespeed_psol:" \
     "  Remote      -> https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz" \
     "  Version     -> ${VER_NGX_MOD_PAGESPEED}" \
-    "  Destination -> ngx_pagespeed-release-beta/psol"
+    "  Destination -> ngx_pagespeed-release-beta/${VER_NGX_MOD_PAGESPEED}.tar.gz"
 cd "ngx_pagespeed-release-beta" &&
-    wget "https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz" &&
-    tar -xzvf "${VER_NGX_MOD_PAGESPEED}.tar.gz"
+    wget "https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz"
 
 ##
 ## Handle PCRE
@@ -562,47 +609,10 @@ out_l2 \
     "Fetching PCRE:" \
     "  Remote      -> http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download" \
     "  Version     -> ${VER_PCRE}" \
-    "  Destination -> ${DIR_NGINX_EXTDEPS}/pcre"
+    "  Destination -> ${DIR_NGINX_EXTDEPS}/pcre-${VER_PCRE}.tar.bz2"
 mkdir -p "${DIR_NGINX_EXTDEPS}" &&
     cd "${DIR_NGINX_EXTDEPS}" &&
-    wget -O "pcre-${VER_PCRE}.tar.bz2" "http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download" &&
-    tar xjf "pcre-${VER_PCRE}.tar.bz2" &&
-    mv "pcre-${VER_PCRE}" "pcre" &&
-    cd "pcre"
-
-## Configure PCRE
-out_line && out_l2 "Configuring PCRE:" \
-    "  -> prefix=/usr" \
-    "  -> mandir=/usr/share/man" \
-    "  -> infodir=/usr/share/info" \
-    "  -> libdir=/usr/lib/x86_64-linux-gnu" \
-    "  -> enable-utf8" \
-    "  -> enable-unicode-properties" \
-    "  -> enable-pcre16" \
-    "  -> enable-pcre32" \
-    "  -> enable-pcregrep-libz" \
-    "  -> enable-pcregrep-libbz2" \
-    "  -> enable-pcretest-libreadline" \
-    "  -> enable-jit"
-./configure \
-    --prefix=/usr \
-    --mandir=/usr/share/man \
-    --infodir=/usr/share/info \
-    --libdir=/usr/lib/x86_64-linux-gnu \
-    --enable-utf8 \
-    --enable-unicode-properties \
-    --enable-pcre16 \
-    --enable-pcre32 \
-    --enable-pcregrep-libz \
-    --enable-pcregrep-libbz2 \
-    --enable-pcretest-libreadline \
-    --enable-jit
-
-## Remove testdata files
-out_line && out_l2 \
-    "Cleaning PCRE source:" \
-    "  Removing Dir -> ${DIR_NGINX_EXTDEPS}/pcre/testdata"
-rm -fr "${DIR_NGINX_EXTDEPS}/pcre/testdata"
+    wget -O "pcre-${VER_PCRE}.tar.bz2" "http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download"
 
 ##
 ## Handle Nginx compilation
@@ -611,28 +621,114 @@ rm -fr "${DIR_NGINX_EXTDEPS}/pcre/testdata"
 ## User output
 out_l1 "Compiling Nginx Packages"
 
-## Sudo usage warning
-out_sudonotice \
-    "sudo dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}"
+if [[ "${BUILD_MODE}" == 1 ]]
+then
 
-## Do it!
-out_l2 \
-    "Building source/dist packages as configured:" \
-    "  Command -> dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}"
-cd "${DIR_NGINX}" && sudo dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}
+  ## Sudo usage warning
+  out_sudonotice \
+      "sudo dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}"
+
+  ## Do it!
+  out_l2 \
+      "Building source/dist packages as configured:" \
+      "  Command -> dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}"
+  cd "${DIR_NGINX}" && sudo dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}
+
+elif [[ "${BUILD_MODE}" == 2 || "${BUILD_MODE}" == 3 || "${BUILD_MODE}" == 4 ]]
+then
+
+  ## Sudo usage warning
+  out_sudonotice \
+      "sudo debuild ${OPT_DEBUILD}"
+
+  ## Do it!
+  out_l2 \
+      "Building source as configured:" \
+      "  Command -> debuild ${OPT_DEBUILD}"
+  cd "${DIR_NGINX}" && debuild ${OPT_DEBUILD}
+
+else
+
+    out_error \
+        "Invalid build mode of "${BUILD_MODE}". Choose:" \
+        "  1 -> Build Source and Packages (for local install)" \
+        "  2 -> Build Source Only (for PPA upload)" \
+        "  3 -> Build Source Only (and do PPA upload)" \
+        "  4 -> Build Source Only (and run SBuild)"
+
+fi
 
 ##
-## DONE!
+## DONE COMPILING!
 ##
 
 ## User output
-out_l1 "All operations completed successfully!"
+out_l1 "Handling Post-Compilation Tasks"
 
-## Show user steps to remove previous nginx packages without affecting dependencies and then install nginx-scribe
-out_l2 \
-    "To replace the standard nginx packages with \"scribe-nginx\", run:" \
-    "  sudo dpkg -r --force-all nginx nginx-common nginx-full nginx-light nginx-extra nginx-scribe" \
-    "  sudo dpkg -i build/nginx-common_1.7.7-1+${NAM_BUILD_UBUNTU}0-scribe1_all.deb build/nginx-scribe_1.7.7-1+${NAM_BUILD_UBUNTU}0-scribe1_amd64.deb" \
-    "  sudo service nginx restart" \
+BUILD_VER_FILENAME="$(cat debian/changelog | head -n 1 | grep -oe "${VER_NGINX}\-1+${NAM_BUILD_UBUNTU}0-scribe[0-9]*")"
+
+if [[ "${BUILD_MODE}" == 2 ]]
+then
+
+    ## User output
+    out_l2 \
+        "NOT Uploading source files to Launchpad. You can perform this manually via the provided instructions."
+
+    ## Information on pusing to launchpad
+    out_l2 \
+        "To upload to launchpad execute the following commands:" \
+        "  cd ${DIR_BUILD}" \
+        "  dput ppa:${BUILD_LAUNCHPAD_URL} nginx_${BUILD_VER_FILENAME}_source.changes"
+
+elif [[ "${BUILD_MODE}" == 3 ]]
+then
+
+    ## User output
+    out_l2 \
+        "Uploading source files to Launchpad. Please wait."
+
+    ## Information on pusing to launchpad
+    out_sudonotice \
+        "Uploading source to Launchpad:" \
+        "cd ${DIR_BUILD}" \
+        "dput ppa:${BUILD_LAUNCHPAD_URL} nginx_${BUILD_VER_FILENAME}_source.changes"
+
+    cd "${DIR_BUILD}"
+    dput "ppa:${BUILD_LAUNCHPAD_URL}" "nginx_${BUILD_VER_FILENAME}_source.changes"
+
+elif [[ "${BUILD_MODE}" == 4 ]]
+then
+
+    ## User output
+    out_l2 \
+        "Performing build using SimpleSBuild Enviornment."
+
+    ## Information on pusing to launchpad
+    out_sudonotice \
+        "SBuild Run:" \
+        "cd ${DIR_NGINX}" \
+        "sbuild ${OPT_SBUILD}"
+
+    cd "${DIR_NGINX}"
+    sbuild ${OPT_SBUILD}
+
+elif [[ "${BUILD_MODE}" == 1 ]]
+then
+
+    ## User output
+    out_l2 \
+        "NOT Installing compiled packages. You can perform this manually via the provided instructions."
+
+    ## Show user steps to remove previous nginx packages without affecting dependencies and then install nginx-scribe
+    out_l2 \
+        "To replace the standard nginx packages with \"scribe-nginx\", run:" \
+        "  sudo dpkg -r --force-all nginx nginx-common nginx-full nginx-light nginx-extra nginx-scribe" \
+        "  sudo dpkg -i build/nginx-common_${BUILD_VER_FILENAME}_all.deb build/nginx-scribe_${BUILD_VER_FILENAME}_amd64.deb" \
+        "  sudo service nginx restart" \
+
+fi
+
+## User output
+out_l1 "All operations completed successfully!"
 
 ## EOF

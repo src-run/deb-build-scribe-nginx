@@ -1,3 +1,30 @@
+nginx (1.7.7-1+trusty0-scribe5) trusty; urgency=high
+
+  * Works using sbuild with help from https://wiki.ubuntu.com/SimpleSbuild
+    and direction from @cjwatson on irc.freenode.net - thanks!
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 07:50:00 -0500
+
+nginx (1.7.7-1+trusty0-scribe4) trusty; urgency=high
+
+  * This won't work...perhaps #launchpad can help after this build fails...
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 05:00:00 -0500
+
+nginx (1.7.7-1+trusty0-scribe3) trusty; urgency=high
+
+  * Possible fixes for build errors
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 04:10:50 -0500
+
+nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
+
+  * Support for utopic added
+  * Cleaned up dependencies for scribe-nginx
+  * Leaner build of scribe-nginx
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 00:53:50 -0500
+
 nginx (1.7.7-1+trusty0-scribe1) trusty; urgency=high
 
   * custom build of Nginx for Scribe Inc; see README.md for details

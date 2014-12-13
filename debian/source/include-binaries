@@ -1,5 +1,2 @@
-debian/modules/release-1.9.32.2-beta.zip
-debian/modules/ngx_pagespeed-release-beta/1.9.32.2.tar.gz
-debian/modules/ngx_pagespeed-release-beta/psol/lib/Release/linux/ia32/pagespeed_js_minify
-debian/modules/ngx_pagespeed-release-beta/psol/lib/Release/linux/x64/pagespeed_js_minify
-debian/extdeps/pcre-8.36.tar.bz2
+debian/modules/ngx_pagespeed-release-beta/%VER_NGX_MOD_PAGESPEED%.tar.gz
+debian/extdeps/pcre-%VER_PCRE%.tar.bz2
