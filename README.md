@@ -31,6 +31,7 @@ The following are key configuration items:
   - [`4`] Perform a test build using SimpleSbuild, a sanitized enviornment similar to the automated builders used by Launchpad.
 
 
+
 - `BUILD_LAUNCHPAD_URL`
 
   In order to take advantage of build option `3` and have your source files automatically uploaded to Launchpad upon successful source generation, this must be configured to your Laucnhpad PPA path.
@@ -72,17 +73,13 @@ The following configuration flags—*generallty not compiled by default*—are *
 
 The following config flags—*generally compiled by default*—are *explicitly disabled* in this build:
 
-- [`Poll and Select`](http://wiki.nginx.org/Optimizations) 
+- `Poll and Select`, *--without-poll_module* and *--without-select_module*
 
-  *--without-poll_module *and* --without-select_module*
+  We don't need these as we can use the `epoll` event model which is preferable on a Linux kernel *>2.6* enviornment. See http://wiki.nginx.org/Optimizations
 
-  We don't need these as we can use the `epoll` event model which is preferable on a Linux kernel *>2.6* enviornment.
+- `UWSGI`, *--without-http_uwsgi_module*
 
-- [`UWSGI`](https://uwsgi-docs.readthedocs.org/en/latest/) 
-
-  *--without-http_uwsgi_module*
-
-  We don't use uWSGI for any of our services.
+  We don't use uWSGI for any of our services. See https://uwsgi-docs.readthedocs.org/en/latest/
 
 ### Modules
 
