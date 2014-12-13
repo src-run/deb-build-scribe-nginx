@@ -14,12 +14,11 @@ set -e
 
 ## Software versions
 VER_NGINX=1.7.7
-VER_DEB_NGINX="1.7.7-1+trusty0"
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.2
 
 ## Action delay
-ACTION_DELAY=1
+ACTION_DELAY=0
 
 ## Strict build dependencies
 APT_DEPS_STRICT="dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
@@ -57,10 +56,10 @@ NEW_FILES=(
 OPT_DPKG_BUILDPACKAGE="-F --force-sign"
 
 ## Output handling
-OUT_SLEEP_LEVEL0=6
-OUT_SLEEP_LEVEL1=4
-OUT_SLEEP_LEVEL2=2
-OUT_SLEEP_SUDONOTICE=12
+OUT_SLEEP_LEVEL0=2
+OUT_SLEEP_LEVEL1=1
+OUT_SLEEP_LEVEL2=1
+OUT_SLEEP_SUDONOTICE=4
 
 ## Disable output delay handlers
 if [[ "${ACTION_DELAY}" == "0" ]]; then
@@ -80,8 +79,18 @@ DIR_NGINX_DEBIAN="${DIR_NGINX}/debian"
 DIR_NGINX_MODULES="${DIR_NGINX_DEBIAN}/modules"
 DIR_NGINX_EXTDEPS="${DIR_NGINX_DEBIAN}/extdeps"
 
+## Required key
+KEY_HREF="http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0x00A6F0A3C300EE8C"
+
 ## Runtime requirements/vars
-VER_UBUNTU=14.04
+VER_UBUNTU=(
+    "14.04"
+    "14.10"
+)
+NAM_UBUNTU=(
+    "trusty"
+    "utopic"
+)
 VER_SELF=0.1.0
 
 ##
@@ -282,20 +291,35 @@ else
         "Note: This script will provide a warning and chance to exit before running any escalated commands."
 fi
 
+## Foreach supported version
+VER_BUILD_UBUNTU=0
+NAM_BUILD_UBUNTU=0
+for VER_UBUNTU_I in "${!VER_UBUNTU[@]}"
+do
+    if [[ "$(which lsb_release)" && "$(lsb_release -r | cut -f2)" == "${VER_UBUNTU[$VER_UBUNTU_I]}" ]]
+    then
+        VER_BUILD_UBUNTU="${VER_UBUNTU[$VER_UBUNTU_I]}"
+        NAM_BUILD_UBUNTU="${NAM_UBUNTU[$VER_UBUNTU_I]}"
+    fi
+done
+
 ## Require compatable Ubuntu version
-if [[ ! "$(which lsb_release)" || "$(lsb_release -r | cut -f2)" != "${VER_UBUNTU}" ]]
+if [[ "${VER_BUILD_UBUNTU}" == 0 || "${NAM_BUILD_UBUNTU}" == 0 ]];
 then
     # If unsuported enviornment, exit
     out_error \
         "You are running an incompatable version of Linux." \
-        "This script can only be run on Ubuntu version ${VER_UBUNTU}."
+        "This script can only be run on Ubuntu versions [$(printf " %s" "${VER_UBUNTU[@]}") ]."
 else
     # Good, the enviornment passed basic checks
     out_l2 \
         "You are running a compatable version of Linux:" \
-        "  Distribution -> Ubuntu" \
-        "  Version      -> ${VER_UBUNTU}"
+        "  Distribution   -> Ubuntu" \
+        "  Version Name   -> ${NAM_BUILD_UBUNTU}" \
+        "  Version Number -> ${VER_BUILD_UBUNTU}"
 fi
+
+VER_DEB_NGINX="1.7.7-1+${NAM_BUILD_UBUNTU}0"
 
 ##
 ## Cleanup (from previous builds)
@@ -337,7 +361,8 @@ out_l1 "Configuring system apt"
 
 ## Sudo notice
 out_sudonotice \
-    "sudo su -c 'echo -e 'deb http://ppa.launchpad.net/nginx/development/ubuntu trusty main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu trusty main' > /etc/apt/sources.list.d/nginx-development-trusty.list'" \
+    "sudo su -c 'echo -e 'deb http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main' > /etc/apt/sources.list.d/nginx-development-sources.list'" \
+    "wget -qO - "${KEY_HREF}" | sudo apt-key add -" \
     "sudo apt-get update" \
     "sudo apt-get -y install ${APT_DEPS_STRICT}" \
     "sudo apt-get -y build-dep nginx nginx-extras"
@@ -346,13 +371,14 @@ out_sudonotice \
 out_l2 \
     "Adding source.list entry:" \
     "  Repo -> http://ppa.launchpad.net/nginx/development/ubuntu" \
-    "  File -> /etc/apt/sources.list.d/nginx-development-trusty.list"
+    "  File -> /etc/apt/sources.list.d/nginx-development-sources.list"
 
 ## Handle adding required PPA
-sudo su -c 'echo -e "deb http://ppa.launchpad.net/nginx/development/ubuntu trusty main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu trusty main" > /etc/apt/sources.list.d/nginx-development-trusty.list'
+echo -e "deb http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main" | sudo tee /etc/apt/sources.list.d/nginx-development-sources.list > /dev/null
 
 ## Handle apt update
-out_l2 "Updating apt cache."
+out_l2 "Adding key and updating apt cache."
+wget -qO - "${KEY_HREF}" | sudo apt-key add -
 sudo apt-get update
 
 ## Handle pre-defined dependency instalation
@@ -405,6 +431,13 @@ done
 
 ## Make patches directory
 mkdir -p "${DIR_SELF_PATCHES}"
+
+## Move changelog for specific ubuntu version to correct location
+out_l2 \
+    "Moving Changelog for Specific Ubuntu Version" \
+    "  From -> ${DIR_SELF_PATCHES}/changelog_${NAM_BUILD_UBUNTU}" \
+    "  To   -> ${DIR_SELF_PATCHES}/changelog"
+cp "${DIR_SELF_PATCHES}/changelog_${NAM_BUILD_UBUNTU}" > "${DIR_SELF_PATCHES}/changelog"
 
 ## For each file we want to patch against source package...
 for patch_file in "${PATCH_FILES[@]}"
@@ -599,7 +632,7 @@ out_l1 "All operations completed successfully!"
 out_l2 \
     "To replace the standard nginx packages with \"scribe-nginx\", run:" \
     "  sudo dpkg -r --force-all nginx nginx-common nginx-full nginx-light nginx-extra nginx-scribe" \
-    "  sudo dpkg -i build/nginx-common_1.7.7-1+trusty0-scribe1_all.deb build/nginx-scribe_1.7.7-1+trusty0-scribe1_amd64.deb" \
+    "  sudo dpkg -i build/nginx-common_1.7.7-1+${NAM_BUILD_UBUNTU}0-scribe1_all.deb build/nginx-scribe_1.7.7-1+${NAM_BUILD_UBUNTU}0-scribe1_amd64.deb" \
     "  sudo service nginx restart" \
 
 ## EOF
