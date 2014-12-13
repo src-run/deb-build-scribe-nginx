@@ -1,22 +1,57 @@
-# Nginx (Scribe Flavor)
+# Nginx Mainline (Scribe Build)
 
-This is a build script that pulls the 
-[Ubuntu Nginx Development Branch](http://ppa.launchpad.net/nginx/development/ubuntu) 
-using `apt-get source nginx`, applies a collection of patch files to add/remove `rules` from
-the debian configuration scripts, and finally runs `dpkg-buildpackage` to build the custom 
-Nginx packages.
+This script builds a set of Nginx packages against the [Ubuntu Nginx Mainline Branch](http://ppa.launchpad.net/nginx/development/ubuntu), currently at version `1.7.8`, with an emphasis on producing a streamlined final binary that includes/excluded configuration flags and adds a short list of modules used internally by [Scribe Inc.](https://scribenet.com/)—for both our own websites and those we administer. 
 
-## Packages
+*Very generally, this script simply pulls the latest Nginx mainline source and adds any additional files, applies any relivant patches, clones any relivant modules and external dependencies. It can then run a handlful of build operations against the resulting source.*
 
-This script builds the latest (mainline) `nginx-[light|full|extras]` variants as well as an additional Scribe Inc specific package: `nginx-scribe`. While the former packages reflect the defaults, the latter package is configured per the following details.
+## Supported Ubuntu Releases
 
-## Configuration
+At this time, the build script does a simply check that you are running a supported Ubuntu version: `Trusty 14.04` or `Utopic 14.10`. With that said, it should be trivial to to support later releases of Ubuntu—the version check simply means *I haven't tested it on that enviornment yet*, not that it is incompatable.
 
-Below you can find a detailed rundown of enabled/disabled flags as well as the optional upstream Nginx modules and third-party modules compiled into `nginx-scribe`.
+## Bootstrap Configuration
+
+Before runing the `bootstrap.sh` script, it is important to familiarize (and generally customize) the configuration options available. Neglecting to do so will not provide optimal results.
+
+The following are key configuration items:
+
+- `BUILD_SIGNING_KEY_ID`
+
+  Your PGP siging key, used to sign your source and package files. By default this script runs with `--force-sign` enabled, and will not exit successfully if you don't change the signing key. For more information, see the [Ubuntu Help Docs](https://help.ubuntu.com/community/GnuPrivacyGuardHowto).
+
+- `BUILD_MODE`
+  
+  This script can run in a number of build modes that dictate its behaviour after the intial boostrap. The `BUILD_MODE` is defined by assigning it one of the following numeric options:
+  
+  - [`1`] Generate source and binary packages locally in your current (non-sanatized) enviornment. This will result in packages that *should* be capable of installation on any target system of the same release.
+
+  - [`2`] Generate source packages only (generally for a PPA upload)
+  
+  - [`3`] Generate source packages only (and perform the PPA upload automatically)
+  
+  - [`4`] Perform a test build using SimpleSbuild, a sanitized enviornment similar to the automated builders used by Launchpad.
+  
+- `BUILD_LAUNCHPAD_URL`
+
+  In order to take advantage of build option `3` and have your source files automatically uploaded to Launchpad upon successful source generation, this must be configured to your Laucnhpad PPA path.
+
+- `SBUILD_DIST`
+
+  In order to take advantage of build option `4` and run your build using SimpleSbuild locally (to mimic a similar enviornment to Launchpad's automated builders), this option must be set to an installed distribution name. Assumes SimpleSBuild has been setup per the 
+  [Ubuntu Wiki on SimpleSbuild](https://wiki.ubuntu.com/SimpleSbuild).
+
+- `OPT_DPKG_BUILDPACKAGE`
+
+  If you only plan on using option one for testing purposes and do not need your files signed, you must remove the `--force-sign -k${BUILD_SIGNING_KEY_ID}` line from the `OPT_DPKG_BUILDPACKAGE` variable. Otherwise, if you haven't setup a GPG key and updated the changelog to reflect your name and e-mail address, the build will fail.
+
+## Build Configuration
 
 ### Flags
 
-The following configuration flags—*generallty not compiled by default*—are **explicitly enabled** in this build:
+The following configuration flags—*generallty not compiled by default*—are *explicitly enabled* in this build:
+
+- `IPv6`, *--with-ipv6*
+
+  Enable IPv6 support within Nginx.
 
 - `debug`, *--with-debug*
 
@@ -28,21 +63,21 @@ The following configuration flags—*generallty not compiled by default*—are *
 
 - `PCRE JIT`, *--with-pcre-jit*
 
-  Enable PCRE Just-In-Time (JIT) regular expression compilation. *(Substantial performance gains on regex-heavy server configurations)*
+  Enable PCRE Just-In-Time (JIT) regular expression compilation. *(Substantial performance gains on regex-heavy server configurations, requires statically linking PCRE to during compilation.)*
 
 - `AIO`, *--with-file-aio*
 
   Enable kernel asynchronous I/O support. *(Allows the process that requests an IO operation to not be blocked if the data is unavailable; execution continues and the process can later check the status of the submitted IO request.)*
 
-The following config flags—*generally compiled by default*—are **explicitly disabled** in this build:
+The following config flags—*generally compiled by default*—are *explicitly disabled* in this build:
 
-- [`poll_module and select_module`](http://wiki.nginx.org/Optimizations) 
+- [`Poll and Select`](http://wiki.nginx.org/Optimizations) 
 
   *--without-poll_module *and* --without-select_module*
 
   We don't need these as we can use the `epoll` event model which is preferable on a Linux kernel *>2.6* enviornment.
 
-- [`http_uwsgi_module`](https://uwsgi-docs.readthedocs.org/en/latest/) 
+- [`UWSGI`](https://uwsgi-docs.readthedocs.org/en/latest/) 
 
   *--without-http_uwsgi_module*
 
@@ -60,222 +95,35 @@ The following modules are compiled into Nginx with this release:
 
   Provides access to basic status information.
 
-- [`http_realip_module`](http://nginx.org/en/docs/http/ngx_http_realip_module.html)
-
-  Used to change the client address to the one sent in the specified header field.
-
-- [`http_auth_request_module`](http://nginx.org/en/docs/http/ngx_http_auth_request_module.html)
-
-  Implements client authorization based on the result of a subrequest.
-
-- [`http_addition_module`](http://nginx.org/en/docs/http/ngx_http_addition_module.html)
-
-  Filter that adds text before and after a response.
-
-- [`http_dav_module`](http://nginx.org/en/docs/http/ngx_http_dav_module.html)
-
-  File management automation via the WebDAV protocol.
-
 - [`http_geoip_module`](http://nginx.org/en/docs/http/ngx_http_geoip_module.html)
 
   Creates variables with values depending on the client IP address, using the precompiled [MaxMind](http://www.maxmind.com/) databases.
 
-- [`http_gzip_static_module`](http://nginx.org/en/docs/http/ngx_http_gzip_static_module.html)
-
-  Allows sending precompressed files with the “.gz” filename extension instead of regular files.
-
-- [`http_image_filter_module`](http://nginx.org/en/docs/http/ngx_http_image_filter_module.html)
-
-  Filter that transforms images in JPEG, GIF, and PNG formats.
-
-- [`http_mp4_module`](http://nginx.org/en/docs/http/ngx_http_mp4_module.html)
-
-  Pseudo-streaming server-side support for MP4 files.
-
-- [`http_perl_module`](http://nginx.org/en/docs/http/ngx_http_perl_module.html)
-
-  Used to implement location and variable handlers in Perl and insert Perl calls into SSI.
-
-- [`http_random_index_module`](http://nginx.org/en/docs/http/ngx_http_random_index_module.html)
-
-  Processes requests ending with the slash character (‘/’) and picks a random file in a directory to serve as an index file.
-
-- [`http_secure_link_module`](http://nginx.org/en/docs/http/ngx_http_secure_link_module.html)
-
-  Used to check authenticity of requested links, protect resources from unauthorized access, and limit link lifetime.
-
 - [`http_spdy_module`](http://nginx.org/en/docs/http/ngx_http_spdy_module.html)
 
   Provides experimental support for [SPDY](http://www.chromium.org/spdy/spdy-protocol). Currently implements [draft 3.1](http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3-1).
-
-- [`http_sub_module`](http://nginx.org/en/docs/http/ngx_http_sub_module.html)
-
-  Filter that modifies a response by replacing one specified string by another
-
-- [`http_xslt_module`](http://nginx.org/en/docs/http/ngx_http_xslt_module.html)
-
-  Filter that transforms XML responses using one or more XSLT stylesheets.
-
-- [`headers-more-nginx-module`](https://github.com/openresty/headers-more-nginx-module)
-
-  Adds to the "add" header ability with "set" and "clear".
   
 - [`nginx_auth-pam`](http://web.iti.upv.es/~sto/nginx/ngx_http_auth_pam_module-1.3/)
 
   Enables HTTP Basic Authentication agains PAM.
   
-- [`nginx_cache_purge`](https://github.com/FRiCKLE/ngx_cache_purge)
-
-  Module which adds ability to purge content from FastCGI, proxy, SCGI and uWSGI caches.
-  
-- [`nginx-dav-ext-module`](https://github.com/arut/nginx-dav-ext-module)
-
-  Adds additional (missing) methods from the default Nginx WebDAV implementation.
-  
 - [`nginx-development-kit`](https://github.com/simpl/ngx_devel_kit)
 
   Module that adds additional generic tools that module developers can use in their own modules (required for some of the following modules).
   
-- [`nginx-echo`](https://github.com/openresty/echo-nginx-module)
-
-  Module for bringing the power of "echo", "sleep", "time" and more to Nginx's config file.
-  
-- [`ngx-fancyindex`](https://github.com/aperezdc/ngx-fancyindex)
-
-  Provides absility to add custom headers, CSS, and sorting to default nginx folder index listing.
-  
-- [`nginx_http_push_module`](https://pushmodule.slact.net/)
-
-  Module turns Nginx into an adept HTTP Push and Comet server.
-  
 - [`nginx_upload_progress_module`](https://github.com/masterzen/nginx-upload-progress-module/tree/master)
 
   An implementation of an upload progress system, that monitors RFC1867 POST upload as they are transmitted to upstream servers.
-  
-- [`nginx-upstream-fair`](https://github.com/gnosek/nginx-upstream-fair)
+ 
+- [`ngx_pagespeed`](https://github.com/pagespeed/ngx_pagespeed)
 
-  The Nginx fair proxy balancer enhances the standard round-robin load balancer provided with Nginx so that it will track busy back end servers (e.g. Thin, Ebb, Mongrel) and balance the load to non-busy server processes.
-
-- [`ngx_http_substitutions_filter_module`](https://github.com/yaoweibin/ngx_http_substitutions_filter_module)
-
-  Filter which can do both regular expression and fixed string substitutions on response bodies.
-
-- [`set-misc-nginx-module`](https://github.com/openresty/set-misc-nginx-module)
-
-  Various set_xxx directives added to nginx's rewrite module (md5/sha1, sql/json quoting, and many more).
-
-- [`array-var-nginx-module`](https://github.com/openresty/array-var-nginx-module)
-
-  Add support for array variables to nginx config files.
-
-- [`memc-nginx-module`](https://github.com/openresty/memc-nginx-module)
-
-  Extended version of the standard memcached module that supports set, add, delete, and many more memcached commands.
-
-- [`srcache-nginx-module`](https://github.com/openresty/srcache-nginx-module)
-
-  Transparent subrequest-based caching layout for arbitrary nginx locations.
-
-
-### Package Requirements
-
-- `dpkg-dev` 
-- `build-essential` 
-- `zlib1g-dev` 
-- `libpcre3` 
-- `libpcre3-dev` 
-- `unzip`
-- `perl` *(>5.6.1)*
-- `libreadline-dev`
-- `libssl-dev`
-- `libexpat-dev`
+  ngx_pagespeed speeds up your site and reduces page load time by automatically applying web performance best practices to 
+  pages and associated assets (CSS, JavaScript, images) without requiring you to modify your existing content or workflow.
 
 ## Usage
 
-To build the debian packages, first clone and enter the repository
-
 ```
 git clone https://github.com/scribenet/nginx-scribe.git && cd nginx-scribe
-```
-
-### Build
-
-By default both source and binary packages are created by the build script. To run the build process, simple execute the `build.sh` command within the root of this repository.
-
-*(Note: It is important to enter the repository root directory prior to running the build script.)*
-
-```
-cd /path/to/repo/nginx-scribe
-./build.sh
-```
-
-If you would like to change the behaviour of the build script, consult the following sub-sections. For more advanced changes, the build script is well commented *(but proceed at your own risk)*.
-
-#### Packaging Options
-
-In the build script (`build.sh`), within the configuration section near the top, there is a variable named `OPT_DPKG_BUILDPACKAGE` that allows you to change the behaviour of the build process. By default it passes `-F` and `--force-sign` to `dpkg-buildpackage`. 
-
-The most common options you will want to pass are `-F`, `-b`, or `-S`. 
-
-- `-F` *(The default)*
-
-  Specifies a normal full build, binary and source packages will be built.
-  
-- `-b`
-
-  Specifies a binary-only build, no source files are to be built and/or distributed.
-  
-- `S`
-
-  Specifies a source-only build, no binary packages need to be made.
-  
-To investigate other available options to pass, view the main page using `man dpkg-build-package`.
-
-#### Signing
-
-Optionally, if you want to enable proper PGP signing, you must edit [debian/changelog](https://github.com/scribenet/nginx-scribe/blob/master/debian/changelog) and
-prepend a new entry. For example, if you have a PGP secret key attached to
-`First Last <flast@gmail.com>` you might prepend the following
-
-*(Note: This is only relivant if you plan on uploading the packages to Launchpad.)*
-
-```
-nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
-
-  * Some possible details pertaining to the package
-  * [...]
-  * Another line about the package
-
- -- First Last <flast@gmail.com>  Sat, 08 Nov 2014 01:14:47 -0400
-```
-
-**Important**: If you do not plan on signing, you must remove the `--force-sign` option passed to `dpkg-buildpackage` by default. Find the following line
-within `build.sh` under the configuration section
-```
-OPT_DPKG_BUILDPACKAGE="-F --force-sign"
-```
-And modify it to just include the `-F` flag, as such
-```
-OPT_DPKG_BUILDPACKAGE="-F"
-```
-This will allow you to create the packages without signing.
-
-### Installing
-
-To remove your previous install of nginx and install `nginx-scribe`, simply run the following commands
-
-*(Note: The first command will remove your previous nginx packages without removing their dependencies—such as phpmyadmin or other similar packages. Failing to run the second command will leave your system with unresolved dependencies and may result in unexpected behaviour!)*
-
-```
-sudo dpkg -r --force-all \
-  nginx \
-  nginx-common \
-  nginx-full \
-  nginx-light \
-  nginx-extra \
-  nginx-scribe
-
-sudo dpkg -i \
-  build/nginx-common_1.7.7-1+trusty0-scribe*_all.deb \
-  build/nginx-scribe_1.7.7-1+trusty0-scribe*_amd64.deb
+[nano/vim] bootstrap.sh
+./bootstrap.sh
 ```
