@@ -51,70 +51,6 @@ common_configure_flags := \
 					   --with-http_realip_module \
 					   --with-http_auth_request_module
 
-light_configure_flags := \
-					  $(common_configure_flags) \
-					  --with-http_gzip_static_module \
-					  --without-http_browser_module \
-					  --without-http_geo_module \
-					  --without-http_limit_req_module \
-					  --without-http_limit_zone_module \
-					  --without-http_memcached_module \
-					  --without-http_referer_module \
-					  --without-http_scgi_module \
-					  --without-http_split_clients_module \
-					  --without-http_ssi_module \
-					  --without-http_userid_module \
-					  --without-http_uwsgi_module \
-					  --add-module=$(MODULESDIR)/nginx-echo
-
-full_configure_flags := \
-					 $(common_configure_flags) \
-					 --with-http_addition_module \
-					 --with-http_dav_module \
-					 --with-http_geoip_module \
-					 --with-http_gzip_static_module \
-					 --with-http_image_filter_module \
-					 --with-http_spdy_module \
-					 --with-http_sub_module \
-					 --with-http_xslt_module \
-					 --with-mail \
-					 --with-mail_ssl_module \
-					 --add-module=$(MODULESDIR)/nginx-auth-pam \
-					 --add-module=$(MODULESDIR)/nginx-dav-ext-module \
-					 --add-module=$(MODULESDIR)/nginx-echo \
-					 --add-module=$(MODULESDIR)/nginx-upstream-fair \
-					 --add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
-
-extras_configure_flags := \
-					   $(common_configure_flags) \
-					   --with-http_addition_module \
-					   --with-http_dav_module \
-					   --with-http_flv_module \
-					   --with-http_geoip_module \
-					   --with-http_gzip_static_module \
-					   --with-http_image_filter_module \
-					   --with-http_mp4_module \
-					   --with-http_perl_module \
-					   --with-http_random_index_module \
-					   --with-http_secure_link_module \
-					   --with-http_spdy_module \
-					   --with-http_sub_module \
-					   --with-http_xslt_module \
-					   --with-mail \
-					   --with-mail_ssl_module \
-					   --add-module=$(MODULESDIR)/headers-more-nginx-module \
-					   --add-module=$(MODULESDIR)/nginx-auth-pam \
-					   --add-module=$(MODULESDIR)/nginx-cache-purge \
-					   --add-module=$(MODULESDIR)/nginx-dav-ext-module \
-					   --add-module=$(MODULESDIR)/nginx-development-kit \
-					   --add-module=$(MODULESDIR)/nginx-echo \
-					   --add-module=$(MODULESDIR)/ngx-fancyindex \
-					   --add-module=$(MODULESDIR)/nginx-http-push \
-					   --add-module=$(MODULESDIR)/nginx-lua \
-					   --add-module=$(MODULESDIR)/nginx-upload-progress \
-					   --add-module=$(MODULESDIR)/nginx-upstream-fair \
-					   --add-module=$(MODULESDIR)/ngx_http_substitutions_filter_module
-
 scribe_configure_flags := \
 					   $(common_configure_flags) \
 					   --without-poll_module \
@@ -125,14 +61,16 @@ scribe_configure_flags := \
 					   --with-file-aio \
 					   --with-http_geoip_module \
 					   --with-http_spdy_module \
-                       --add-module=$(MODULESDIR)/scribenet_ngx_http_extended_status_module \
+					   --add-module=$(MODULESDIR)/scribenet_ngx_http_extended_status_module \
 					   --add-module=$(MODULESDIR)/ngx_pagespeed-release-beta \
 					   --add-module=$(MODULESDIR)/alphashack_nginx_graphdat \
 					   --add-module=$(MODULESDIR)/nginx-auth-pam \
 					   --add-module=$(MODULESDIR)/nginx-cache-purge \
 					   --add-module=$(MODULESDIR)/nginx-development-kit \
 					   --add-module=$(MODULESDIR)/ngx-fancyindex \
-					   --add-module=$(MODULESDIR)/nginx-upload-progress
+					   --add-module=$(MODULESDIR)/nginx-upload-progress \
+					   --add-module=$(MODULESDIR)/suehiro_ngx_http_flood_detector_module \
+					   --add-module=$(MODULESDIR)/aufi_anddos
 
 %:
 	dh $@ --with systemd

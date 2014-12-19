@@ -48,18 +48,14 @@ APT_DEPS_DYNAMIC=""
 ## Modules to be installed
 MOD_GIT_NAME=(
     "alphashack/nginx_graphdat"
-#    "suehiro/ngx_http_flood_detector_module"
-#    "aufi/anddos"
-#    "FRiCKLE/ngx_cache_purge"
-#    "FRiCKLE/ngx_slowfs_cache"
+    "suehiro/ngx_http_flood_detector_module"
+    "aufi/anddos"
     "scribenet/ngx_http_extended_status_module"
 )
 MOD_GIT_VERSION=(
     "master"
-#    "master"
-#    "master"
-#    "2.2"
-#    "1.10"
+    "master"
+    "master"
     "master"
 )
 
