@@ -13,7 +13,7 @@ set -e
 ##
 
 ## Software versions
-VER_NGINX=1.7.7
+VER_NGINX=1.7.8
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.2
 
@@ -23,6 +23,7 @@ BUILD_LAUNCHPAD_URL="scribeinc/nginx"
 
 ## Sbuild distribution name (assumes sbuild has been configured per
 ## instructions at https://wiki.ubuntu.com/SimpleSbuild)
+#SBUILD_DIST="trusty-amd64-shm"
 SBUILD_DIST="utopic-amd64-shm"
 
 ## Mode
@@ -32,11 +33,14 @@ SBUILD_DIST="utopic-amd64-shm"
 ## 4=perform test build with sbuild
 BUILD_MODE=3
 
+## Local package cache
+LOCAL_PACKAGE_CACHE=1
+
 ## Action delay
 ACTION_DELAY=1
 
 ## Strict build dependencies
-APT_DEPS_STRICT="devscripts dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
+APT_DEPS_STRICT="sbuild debhelper ubuntu-dev-tools apt-cacher-ng devscripts dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
 
 ## Automatically populated by inspecting package dependencies at runtime
 APT_DEPS_DYNAMIC=""
@@ -336,23 +340,24 @@ else
     # Good, the enviornment passed basic checks
     out_l2 \
         "You are running a compatable version of Linux:" \
-        "  Distribution   -> Ubuntu" \
+        "  Distribution    -> Ubuntu" \
         "" \
-        "  Version Name   -> ${NAM_BUILD_UBUNTU}" \
-        "  Version Number -> ${VER_BUILD_UBUNTU}" \
+        "  Version Name    -> ${NAM_BUILD_UBUNTU}" \
+        "  Version Number  -> ${VER_BUILD_UBUNTU}" \
         "" \
-        "  Build Type     -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
+        "  Local Pkg Cache -> $(if [[ "${LOCAL_PACKAGE_CACHE}" == 1 ]]; then echo "Enabled"; else echo "Disabled"; fi)" \
+        "  Build Type      -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
-VER_DEB_NGINX="1.7.7-1+${NAM_BUILD_UBUNTU}0"
+VER_DEB_NGINX="1.7.8-1+${NAM_BUILD_UBUNTU}0"
 
 if [[ "${NAM_BUILD_UBUNTU}" == "trusty" ]]
 then
     ## Include original source for trusty builds
     OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
 else
-    ## Newer builds don't need the source
-    OPT_DEBUILD="-S -sd -k${BUILD_SIGNING_KEY_ID}"
+    ## Newer builds (sometimes) don't need the source
+    OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
 fi
 
 ##
@@ -427,6 +432,45 @@ sudo apt-get -y install ${APT_DEPS_STRICT}
 ## Handle dynamic dependency installation
 out_line && out_l2 "Installing dynamic build dependencies."
 sudo apt-get -y build-dep nginx nginx-extras
+
+##
+## SBuild
+##
+
+## User output
+out_l1 "Local Apt-Cache"
+
+## Add to apt config
+out_l2 \
+    "Adding apt-config:" \
+    "  Apt Cache Config -> echo 'Acquire::http::Proxy "http://127.0.0.1:3142";' | sudo tee /etc/apt/apt.conf.d/01acng"
+echo 'Acquire::http::Proxy "http://127.0.0.1:3142";' | sudo tee /etc/apt/apt.conf.d/01acng > /dev/null 2>&1
+
+## User output
+out_l1 "Configure Current user for SBuild"
+if [[ "$(groups|grep -o sbuild|wc -l)" == "0" ]]; then
+    out_l2 \
+        "Adding user to group:" \
+        "  $USER -> sbuild"
+    sudo adduser $USER sbuild
+else
+    out_l2 \
+        "User already configured in group sbuild"
+fi
+
+#mkdir -p $HOME/ubuntu/scratch
+
+#sbuild-update --keygen
+#sg sbuild
+#mk-sbuild "${NAM_BUILD_UBUNTU}"
+
+#sudo sh -c "sed -e 's#]#-shm]#' \
+#  -e 's#^\(directory=.*\)#\1\nunion-overlay-directory=/dev/shm/schroot/overlay#' \
+#  /etc/schroot/chroot.d/* > /etc/schroot/chroot.d/shm-overlays.conf"
+
+#schroot --list
+#sudo mkdir -p /dev/shm/schroot/overlay/ 
+#sudo mount -o remount,size=75% /dev/shm
 
 ##
 ## Setup and get Nginx source
@@ -642,7 +686,7 @@ then
       "  Command -> dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}"
   cd "${DIR_NGINX}" && sudo dpkg-buildpackage ${OPT_DPKG_BUILDPACKAGE}
 
-elif [[ "${BUILD_MODE}" == 2 || "${BUILD_MODE}" == 3 || "${BUILD_MODE}" == 4 ]]
+elif [[ "${BUILD_MODE}" == 2 || "${BUILD_MODE}" == 3 ]]
 then
 
   ## Sudo usage warning
@@ -654,6 +698,13 @@ then
       "Building source as configured:" \
       "  Command -> debuild ${OPT_DEBUILD}"
   cd "${DIR_NGINX}" && debuild ${OPT_DEBUILD}
+
+elif [[ "${BUILD_MODE}" == 4 ]]
+then
+
+  ## Do it!
+  out_l2 \
+      "No need to build; sbuild will handle that for us."
 
 else
 
@@ -673,6 +724,8 @@ fi
 ## User output
 out_l1 "Handling Post-Compilation Tasks"
 
+## Enter nginx modified source repo
+cd "${DIR_NGINX}"
 BUILD_VER_FILENAME="$(cat debian/changelog | head -n 1 | grep -oe "${VER_NGINX}\-1+${NAM_BUILD_UBUNTU}0-scribe[0-9]*")"
 
 if [[ "${BUILD_MODE}" == 2 ]]

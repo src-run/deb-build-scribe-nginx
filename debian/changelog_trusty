@@ -1,3 +1,71 @@
+nginx (1.7.8-1+trusty0~scribeinc0) trusty; urgency=high
+
+  * Updated to Nginx 1.7.8 using Tomas Ward's most-recent mainline build.
+  * Notable changes (for Scribe Inc):
+    - The "tcp_nodelay" directive works with SPDY connections!
+  * Additional changes for 1.7.8 noted by Tomas Ward in previous changelog.
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 15 Dec 2014 04:00:00 -0500
+
+nginx (1.7.8-1+trusty1) trusty; urgency=medium
+
+  * Changes made to files and folders in debian/modules/:
+    - nginx-lua: Update module to 0.9.13 from upstream.
+    - README.Modules-versions: Update module version for nginx-lua
+
+ -- Thomas Ward <teward@ubuntu.com>  Sun, 14 Dec 2014 19:46:36 -0500
+
+nginx (1.7.8-1+trusty0) trusty; urgency=medium
+
+  * debian/: Resync with Debian Unstable
+  * Remaining changes:
+    - debian/modules/nginx-lua: Update module to 0.9.13rc1 from upstream.
+
+ -- Thomas Ward <teward@ubuntu.com>  Sat, 13 Dec 2014 20:53:38 -0500
+
+nginx (1.7.8-1) UNRELEASED; urgency=medium
+
+  * New Upstream Release
+  * Changes with nginx 1.7.8 (02 Dec 2014):
+    * Change: now the "If-Modified-Since", "If-Range", etc. client request
+      header lines are passed to a backend while caching if nginx knows in
+      advance that the response will not be cached (e.g., when using
+      proxy_cache_min_uses).
+    * Change: now after proxy_cache_lock_timeout nginx sends a request to a
+      backend with caching disabled; the new directives
+      "proxy_cache_lock_age", "fastcgi_cache_lock_age",
+      "scgi_cache_lock_age", and "uwsgi_cache_lock_age" specify a time
+      after which the lock will be released and another attempt to cache a
+      response will be made.
+    * Change: the "log_format" directive can now be used only at http
+      level.
+    * Feature: the "proxy_ssl_certificate", "proxy_ssl_certificate_key",
+      "proxy_ssl_password_file", "uwsgi_ssl_certificate",
+      "uwsgi_ssl_certificate_key", and "uwsgi_ssl_password_file"
+      directives.
+      Thanks to Piotr Sikora.
+    * Feature: it is now possible to switch to a named location using
+      "X-Accel-Redirect".
+      Thanks to Toshikuni Fukaya.
+    * Feature: now the "tcp_nodelay" directive works with SPDY connections.
+    * Feature: new directives in vim syntax highliting scripts.
+      Thanks to Peter Wu.
+    * Bugfix: nginx ignored the "s-maxage" value in the "Cache-Control"
+      backend response header line.
+      Thanks to Piotr Sikora.
+    * Bugfix: in the ngx_http_spdy_module.
+      Thanks to Piotr Sikora.
+    * Bugfix: in the "ssl_password_file" directive when using OpenSSL
+      0.9.8zc, 1.0.0o, 1.0.1j.
+    * Bugfix: alerts "header already sent" appeared in logs if the
+      "post_action" directive was used; the bug had appeared in 1.5.4.
+    * Bugfix: alerts "the http output chain is empty" might appear in logs
+      if the "postpone_output 0" directive was used with SSI includes.
+    * Bugfix: in the "proxy_cache_lock" directive with SSI subrequests.
+      Thanks to Yichun Zhang.
+
+ -- Thomas Ward <teward@ubuntu.com>  Sat, 13 Dec 2014 20:50:16 -0500
+
 nginx (1.7.7-1+trusty0-scribe5) trusty; urgency=high
 
   * Works using sbuild with help from https://wiki.ubuntu.com/SimpleSbuild
