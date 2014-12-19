@@ -125,6 +125,7 @@ scribe_configure_flags := \
 					   --with-file-aio \
 					   --with-http_geoip_module \
 					   --with-http_spdy_module \
+                       --add-module=$(MODULESDIR)/scribenet_ngx_http_extended_status_module \
 					   --add-module=$(MODULESDIR)/ngx_pagespeed-release-beta \
 					   --add-module=$(MODULESDIR)/alphashack_nginx_graphdat \
 					   --add-module=$(MODULESDIR)/nginx-auth-pam \
