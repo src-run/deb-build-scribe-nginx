@@ -79,6 +79,7 @@ NEW_FILES=(
     "debian/nginx-scribe.postinst"
     "debian/nginx-scribe.prerm"
     "debian/source/include-binaries"
+    "debian/patches/ngx_http_extended_status_module"
 )
 
 ## Files requiring version string updates
