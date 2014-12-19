@@ -726,7 +726,7 @@ out_l1 "Handling Post-Compilation Tasks"
 
 ## Enter nginx modified source repo
 cd "${DIR_NGINX}"
-BUILD_VER_FILENAME="$(cat debian/changelog | head -n 1 | grep -oe "${VER_NGINX}\-1+${NAM_BUILD_UBUNTU}0-scribe[0-9]*")"
+BUILD_VER_FILENAME="$(cat debian/changelog | head -n 1 | grep -oe "${VER_NGINX}\-[0-9]+${NAM_BUILD_UBUNTU}[0-9]-scribe[0-9]*")"
 
 if [[ "${BUILD_MODE}" == 2 ]]
 then
