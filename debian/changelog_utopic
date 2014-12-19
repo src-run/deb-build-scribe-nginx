@@ -1,4 +1,4 @@
-nginx (1.7.8-1+utopic2-scribe1) trusty; urgency=high
+nginx (1.7.8-1+utopic2-scribe1) utopic; urgency=high
 
   * New build against trusty2 and utopic2
 
