@@ -1,3 +1,9 @@
+nginx (1.7.8-1+utopic2-scribe1) trusty; urgency=high
+
+  * New build against trusty2 and utopic2
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 18 Dec 2014 21:30:00 -0500
+
 nginx (1.7.8-1+utopic0-scribe0) utopic; urgency=high
 
   * Updated to Nginx 1.7.8 using Tomas Ward's most-recent mainline build.
