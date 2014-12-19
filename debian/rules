@@ -70,7 +70,7 @@ scribe_configure_flags := \
 					   --add-module=$(MODULESDIR)/ngx-fancyindex \
 					   --add-module=$(MODULESDIR)/nginx-upload-progress \
 					   --add-module=$(MODULESDIR)/suehiro_ngx_http_flood_detector_module \
-					   --add-module=$(MODULESDIR)/aufi_anddos
+					   --add-module=$(MODULESDIR)/aufi_anddos/anddos
 
 %:
 	dh $@ --with systemd
