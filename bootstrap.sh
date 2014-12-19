@@ -31,7 +31,7 @@ SBUILD_DIST="utopic-amd64-shm"
 ## 2=source only for ppa upload
 ## 3=source only and do ppa upload
 ## 4=perform test build with sbuild
-BUILD_MODE=3
+BUILD_MODE=1
 
 ## Local package cache
 LOCAL_PACKAGE_CACHE=1
@@ -48,8 +48,18 @@ APT_DEPS_DYNAMIC=""
 ## Modules to be installed
 MOD_GIT_NAME=(
     "alphashack/nginx_graphdat"
+#    "suehiro/ngx_http_flood_detector_module"
+#    "aufi/anddos"
+#    "FRiCKLE/ngx_cache_purge"
+#    "FRiCKLE/ngx_slowfs_cache"
+    "scribenet/ngx_http_extended_status_module"
 )
 MOD_GIT_VERSION=(
+    "master"
+#    "master"
+#    "master"
+#    "2.2"
+#    "1.10"
     "master"
 )
 
@@ -82,10 +92,10 @@ OPT_DPKG_BUILDPACKAGE="-F --force-sign -k${BUILD_SIGNING_KEY_ID}"
 OPT_SBUILD="-d ${SBUILD_DIST}"
 
 ## Output handling
-OUT_SLEEP_LEVEL0=2
-OUT_SLEEP_LEVEL1=1
-OUT_SLEEP_LEVEL2=0
-OUT_SLEEP_SUDONOTICE=2
+OUT_SLEEP_LEVEL0=4
+OUT_SLEEP_LEVEL1=2
+OUT_SLEEP_LEVEL2=1
+OUT_SLEEP_SUDONOTICE=4
 
 ## Disable output delay handlers
 if [[ "${ACTION_DELAY}" == "0" ]]; then
@@ -601,8 +611,6 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
     # Perform submodule init for alphashack/nginx_graphdat
     if [[ "${item_name_git}" == "alphashack/nginx_graphdat" ]]; then
 
-        # Output empty line
-
         # Init/update submodule
         out_line && out_l2 \
             "Addition src actions for ${item_name_git}:" \
@@ -618,6 +626,20 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
             "Cleaning ${item_name_git} source:" \
             "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
         rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
+
+    fi
+
+    if [[ "${item_name_git}" == "scribenet/ngx_http_extended_status_module" ]]; then
+
+        # Init/update submodule
+        out_line && out_l2 \
+            "Addition src actions for ${item_name_git}:" \
+            "  Nginx Source -> ${DIR_NGINX}" \
+            "  Patch File   -> ${DIR_NGINX_MODULES}/${item_path_file}/extended_status-${VER_NGINX}.patch"
+        cd ${DIR_NGINX} &&
+            cp "${DIR_NGINX_MODULES}/${item_path_file}/extended_status-${VER_NGINX}.patch" ./ &&
+            patch -p1 < extended_status-${VER_NGINX}.patch &&
+            rm extended_status-${VER_NGINX}.patch
 
     fi
 
