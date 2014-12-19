@@ -349,7 +349,7 @@ else
         "  Build Type      -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
-VER_DEB_NGINX="1.7.8-1+${NAM_BUILD_UBUNTU}3"
+VER_DEB_NGINX="1.7.8-1+${NAM_BUILD_UBUNTU}2"
 
 if [[ "${NAM_BUILD_UBUNTU}" == "trusty" ]]
 then
