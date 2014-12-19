@@ -630,20 +630,6 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
 
     fi
 
-    if [[ "${item_name_git}" == "scribenet/ngx_http_extended_status_module" ]]; then
-
-        # Init/update submodule
-        out_line && out_l2 \
-            "Addition src actions for ${item_name_git}:" \
-            "  Nginx Source -> ${DIR_NGINX}" \
-            "  Patch File   -> ${DIR_NGINX_MODULES}/${item_path_file}/extended_status-${VER_NGINX}.patch"
-        cd ${DIR_NGINX} &&
-            cp "${DIR_NGINX_MODULES}/${item_path_file}/extended_status-${VER_NGINX}.patch" ./ &&
-            patch -p1 < extended_status-${VER_NGINX}.patch &&
-            rm extended_status-${VER_NGINX}.patch
-
-    fi
-
     # Output empty line
     out_line
 
