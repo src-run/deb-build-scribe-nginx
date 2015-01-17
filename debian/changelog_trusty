@@ -1,3 +1,51 @@
+nginx (1.7.9-1+trusty2-scribe1) trusty; urgency=medium
+
+  * New build against Thmas Ward's Nginx Mainline 1.7.9 build
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Sat, 17 Jan 2015 00:30:00 -0500
+
+nginx (1.7.9-1+trusty2) trusty; urgency=medium
+
+  * New upstream release (1.7.9 - changes detailed in 1.7.9-0 entry)
+  * Resynced packaging with Debian Unstable.
+  * Additional Changes:
+    * d/modules/nginx-lua: Update module to 0.9.13 from upstream.
+    * d/modules/nginx-cache-purge: Update module to 2.3 from upstream.
+    * d/modules/README.Modules-versions: Update module versions per above
+      changes
+  * NOTE: release build number is 2 due to prior build failures in staging
+    PPA - version number increased to make sure this upload is superior to all
+    other version uploads.
+
+ -- Thomas Ward <teward@ubuntu.com>  Fri, 16 Jan 2015 13:48:23 -0500
+
+nginx (1.7.9-0) UNRELEASED; urgency=medium
+
+  * New upstream release
+  * Changes with nginx 1.7.9 (23 Dec 2014):
+    * Feature: variables support in the "proxy_cache", "fastcgi_cache",
+      "scgi_cache", and "uwsgi_cache" directives.
+    * Feature: variables support in the "expires" directive.
+    * Feature: loading of secret keys from hardware tokens with OpenSSL
+      engines.
+      Thanks to Dmitrii Pichulin.
+    * Feature: the "autoindex_format" directive.
+    * Bugfix: cache revalidation is now only used for responses with 200
+      and 206 status codes.
+      Thanks to Piotr Sikora.
+    * Bugfix: the "TE" client request header line was passed to backends
+      while proxying.
+    * Bugfix: the "proxy_pass", "fastcgi_pass", "scgi_pass", and
+      "uwsgi_pass" directives might not work correctly inside the "if" and
+      "limit_except" blocks.
+    * Bugfix: the "proxy_store" directive with the "on" parameter was
+      ignored if the "proxy_store" directive with an explicitly specified
+      file path was used on a previous level.
+    * Bugfix: nginx could not be built with BoringSSL.
+      Thanks to Lukas Tribus.
+
+ -- Thomas Ward <teward@ubuntu.com>  Fri, 16 Jan 2015 13:46:59 -0500
+
 nginx (1.7.8-1+trusty2-scribe2) trusty; urgency=high
 
   * Addition of the following modules:

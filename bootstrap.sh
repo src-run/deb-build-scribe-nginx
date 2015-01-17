@@ -13,9 +13,9 @@ set -e
 ##
 
 ## Software versions
-VER_NGINX=1.7.8
+VER_NGINX=1.7.9
 VER_PCRE=8.36
-VER_NGX_MOD_PAGESPEED=1.9.32.2
+VER_NGX_MOD_PAGESPEED=1.9.32.3
 
 ## The GPG key ID to sign the source/binary with, launchpad URL
 BUILD_SIGNING_KEY_ID=313E4FB0
@@ -23,8 +23,8 @@ BUILD_LAUNCHPAD_URL="scribeinc/nginx"
 
 ## Sbuild distribution name (assumes sbuild has been configured per
 ## instructions at https://wiki.ubuntu.com/SimpleSbuild)
-#SBUILD_DIST="trusty-amd64-shm"
-SBUILD_DIST="utopic-amd64-shm"
+SBUILD_DIST="trusty-amd64-shm"
+#SBUILD_DIST="utopic-amd64-shm"
 
 ## Mode
 ## 1=binary and source
@@ -37,7 +37,7 @@ BUILD_MODE=1
 LOCAL_PACKAGE_CACHE=1
 
 ## Action delay
-ACTION_DELAY=1
+ACTION_DELAY=0
 
 ## Strict build dependencies
 APT_DEPS_STRICT="sbuild debhelper ubuntu-dev-tools apt-cacher-ng devscripts dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
@@ -48,14 +48,8 @@ APT_DEPS_DYNAMIC=""
 ## Modules to be installed
 MOD_GIT_NAME=(
     "alphashack/nginx_graphdat"
-    "suehiro/ngx_http_flood_detector_module"
-    "aufi/anddos"
-    "scribenet/ngx_http_extended_status_module"
 )
 MOD_GIT_VERSION=(
-    "master"
-    "master"
-    "master"
     "master"
 )
 
@@ -357,7 +351,7 @@ else
         "  Build Type      -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
-VER_DEB_NGINX="1.7.8-1+${NAM_BUILD_UBUNTU}2"
+VER_DEB_NGINX="1.7.9-1+${NAM_BUILD_UBUNTU}2"
 
 if [[ "${NAM_BUILD_UBUNTU}" == "trusty" ]]
 then
