@@ -41,7 +41,7 @@ BUILD_MODE=4
 LOCAL_PACKAGE_CACHE=1
 
 ## Action delay
-ACTION_DELAY=1
+ACTION_DELAY=0
 
 ## Strict build dependencies
 APT_DEPS_STRICT="sbuild debhelper ubuntu-dev-tools apt-cacher-ng devscripts dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
@@ -359,7 +359,7 @@ else
         "  Build Type      -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
-VER_DEB_NGINX="${VER_NGINX}-1+${NAM_BUILD_UBUNTU}1"
+VER_DEB_NGINX="${VER_NGINX}-1+${NAM_BUILD_UBUNTU}2"
 OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
 
 ##
@@ -599,6 +599,17 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
         git clone "${item_path_git}" "${item_path_file}" &&
         cd "${item_path_file}" &&
         git checkout "${item_version_git}"
+
+    # Remove binary files in docs for scribenet/nginx-servats-module
+    if [[ "${item_name_git}" == "scribenet/nginx-servats-module" ]]; then
+
+        # Remove binary test files
+        out_line && out_l2 \
+            "Cleaning ${item_name_git} source:" \
+            "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/docs/images/"
+        rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/docs/images/"
+
+    fi
 
     # Perform submodule init for alphashack/nginx_graphdat
     if [[ "${item_name_git}" == "alphashack/nginx_graphdat" ]]; then
