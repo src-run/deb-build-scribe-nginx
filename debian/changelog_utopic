@@ -1,10 +1,111 @@
-nginx (1.7.9-1+utopic2-scribe1) trusty; urgency=medium
+nginx (1.7.10-1+utopic2-scribe2) utopic; urgency=high
+
+  * Scribe's build of nginx@1.7.10 (mainline) for utopic
+    * Updated scribenet/nginx-servats-module module to 1.0.0-beta2
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Tue, 16 Mar 2015 23:00:00 -0500
+
+nginx (1.7.10-1+utopic2-scribe1) utopic; urgency=high
+
+  * Scribe's build of nginx@1.7.10 (mainline) for utopic
+    * Notes:
+      * Be advised: We have retired the previously used extended status module
+        (nginx-modules/ngx_http_extended_status_module) in favor of our internal
+        re-write (scribenet/nginx-servats-module).
+    * Module additions:
+      * suehiro/ngx_http_flood_detector_module@master
+      * scribenet/nginx-servats-module@1.0.0-alpha2
+    * Modules that continue to be compiled in:
+      * alphashack/nginx_graphdat@master
+      * http_ssl_module@upstream
+      * http_stub_status_module@upstream
+      * http_realip_module@upstream
+      * http_auth_request_module@upstream
+      * pcre-jit@upstream (static compile against PCRE 8.36 for proper JIT support)
+      * file-aio@upstream
+      * http_geoip_module@upstream
+      * with-http_spdy_module@upstream
+      * ngx_pagespeed-release-beta@1.9.32.3
+      * headers-more-nginx-module@upstream
+      * nginx-auth-pam@upstream
+      * nginx-cache-purge@upstream
+      * nginx-development-kit@upstream
+      * ngx-fancyindex@upstream
+      * nginx-upload-progress@upstream
+      * nginx-upstream-fair@upstream
+      * suehiro/ngx_http_flood_detector_module@master
+    * Modules that continue to NOT be compiled in:
+      * poll_module@core
+      * select_module@core
+      * http_uwsgi_module@core
+  * Shout-out to Thomas Ward!
+    * Big thanks to Thomas Ward's initial builds of nginx@mainline.
+    * For his relentless and speedy work when it comes to getting the mainline
+      releases available almost as soon as the Nginx team puts them out there.
+    * As always; you'r the best!
+  * From Thomas Ward's original changelog pertaining to nginx@1.7.10:
+    * Feature: the "use_temp_path" parameter of the "proxy_cache_path",
+      "fastcgi_cache_path", "scgi_cache_path", and "uwsgi_cache_path"
+      directives.
+    * Feature: the $upstream_header_time variable.
+    * Workaround: now on disk overflow nginx tries to write error logs once
+      a second only.
+    * Bugfix: the "try_files" directive did not ignore normal files while
+      testing directories.
+      Thanks to Damien Tournoud.
+    * Bugfix: alerts "sendfile() failed" if the "sendfile" directive was
+      used on OS X; the bug had appeared in 1.7.8.
+    * Bugfix: alerts "sem_post() failed" might appear in logs.
+    * Bugfix: nginx could not be built with musl libc.
+      Thanks to James Taylor.
+    * Bugfix: nginx could not be built on Tru64 UNIX.
+      Thanks to Goetz T. Fischer.
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Tue, 16 Mar 2015 07:05:00 -0500
+
+nginx (1.7.10-1+utopic1-scribe0) utopic; urgency=medium
+
+  * New Scribe build against Thmas Ward's Nginx Mainline 1.7.10 build
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Tue, 10 Mar 2015 00:20:00 -0500
+
+nginx (1.7.10-1+utopic0) utopic; urgency=medium
+
+  * New upstream release (1.7.10)
+  * Initial upload to utopic
+
+ -- Thomas Ward <teward@ubuntu.com>  Tue, 10 Feb 2015 12:50:58 -0500
+
+nginx (1.7.10-0) UNRELEASED; urgency=medium
+
+  * New upstream release
+  * Changes with nginx 1.7.10:
+    * Feature: the "use_temp_path" parameter of the "proxy_cache_path",
+      "fastcgi_cache_path", "scgi_cache_path", and "uwsgi_cache_path"
+      directives.
+    * Feature: the $upstream_header_time variable.
+    * Workaround: now on disk overflow nginx tries to write error logs once
+      a second only.
+    * Bugfix: the "try_files" directive did not ignore normal files while
+      testing directories.
+      Thanks to Damien Tournoud.
+    * Bugfix: alerts "sendfile() failed" if the "sendfile" directive was
+      used on OS X; the bug had appeared in 1.7.8.
+    * Bugfix: alerts "sem_post() failed" might appear in logs.
+    * Bugfix: nginx could not be built with musl libc.
+      Thanks to James Taylor.
+    * Bugfix: nginx could not be built on Tru64 UNIX.
+      Thanks to Goetz T. Fischer.
+
+ -- Thomas Ward <teward@ubuntu.com>  Tue, 10 Feb 2015 12:49:40 -0500
+
+nginx (1.7.9-1+utopic2-scribe1) utopic; urgency=medium
 
   * New build against Thmas Ward's Nginx Mainline 1.7.9 build
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 17 Jan 2015 00:30:00 -0500
 
-nginx (1.7.9-1+utopic2) trusty; urgency=medium
+nginx (1.7.9-1+utopic2) utopic; urgency=medium
 
   * New upstream release (1.7.9 - changes detailed in 1.7.9-0 entry)
   * Resynced packaging with Debian Unstable.
@@ -57,7 +158,7 @@ nginx (1.7.8-1+utopic2-scribe2) utopic; urgency=high
 
 nginx (1.7.8-1+utopic2-scribe1) utopic; urgency=high
 
-  * New build against trusty2 and utopic2
+  * New build against utopic2 and utopic2
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 18 Dec 2014 21:30:00 -0500
 

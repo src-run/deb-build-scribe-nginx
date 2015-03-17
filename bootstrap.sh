@@ -13,17 +13,21 @@ set -e
 ##
 
 ## Software versions
-VER_NGINX=1.7.9
+VER_NGINX=1.7.10
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.3
 
 ## The GPG key ID to sign the source/binary with, launchpad URL
-BUILD_SIGNING_KEY_ID=313E4FB0
+BUILD_SIGNING_KEY_ID="313E4FB0"
 BUILD_LAUNCHPAD_URL="scribeinc/nginx"
+
+## Release info
+BUILD_FOR_CODENAME="$(lsb_release -c | cut -f2 2> /dev/null)"
+BUILD_FOR_RELEASE="$(lsb_release -r | cut -f2 2> /dev/null)"
 
 ## Sbuild distribution name (assumes sbuild has been configured per
 ## instructions at https://wiki.ubuntu.com/SimpleSbuild)
-SBUILD_DIST="trusty-amd64-shm"
+SBUILD_DIST="${BUILD_FOR_CODENAME}-amd64-shm"
 #SBUILD_DIST="utopic-amd64-shm"
 
 ## Mode
@@ -31,13 +35,13 @@ SBUILD_DIST="trusty-amd64-shm"
 ## 2=source only for ppa upload
 ## 3=source only and do ppa upload
 ## 4=perform test build with sbuild
-BUILD_MODE=1
+BUILD_MODE=4
 
 ## Local package cache
 LOCAL_PACKAGE_CACHE=1
 
 ## Action delay
-ACTION_DELAY=0
+ACTION_DELAY=1
 
 ## Strict build dependencies
 APT_DEPS_STRICT="sbuild debhelper ubuntu-dev-tools apt-cacher-ng devscripts dpkg-dev build-essential zlib1g-dev libpcre3 libpcre3-dev unzip perl libreadline-dev libssl-dev libexpat-dev libbz2-dev libmemcache-dev libmemcached-dev"
@@ -48,9 +52,13 @@ APT_DEPS_DYNAMIC=""
 ## Modules to be installed
 MOD_GIT_NAME=(
     "alphashack/nginx_graphdat"
+    "suehiro/ngx_http_flood_detector_module"
+    "scribenet/nginx-servats-module"
 )
 MOD_GIT_VERSION=(
     "master"
+    "master"
+    "1.0.0-beta2"
 )
 
 ## Files to create patches against original source
@@ -69,7 +77,7 @@ NEW_FILES=(
     "debian/nginx-scribe.postinst"
     "debian/nginx-scribe.prerm"
     "debian/source/include-binaries"
-    "debian/patches/ngx-http-extended-status-module.patch"
+    "debian/patches/ngx-http-servats-module.patch"
     "debian/patches/series"
 )
 
@@ -351,16 +359,8 @@ else
         "  Build Type      -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
-VER_DEB_NGINX="1.7.9-1+${NAM_BUILD_UBUNTU}2"
-
-if [[ "${NAM_BUILD_UBUNTU}" == "trusty" ]]
-then
-    ## Include original source for trusty builds
-    OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
-else
-    ## Newer builds (sometimes) don't need the source
-    OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
-fi
+VER_DEB_NGINX="${VER_NGINX}-1+${NAM_BUILD_UBUNTU}1"
+OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
 
 ##
 ## Cleanup (from previous builds)
@@ -404,7 +404,7 @@ out_l1 "Configuring system apt"
 out_sudonotice \
     "sudo su -c 'echo -e 'deb http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main\ndeb-src http://ppa.launchpad.net/nginx/development/ubuntu ${NAM_BUILD_UBUNTU} main' > /etc/apt/sources.list.d/nginx-development-sources.list'" \
     "wget -qO - "${KEY_HREF}" | sudo apt-key add -" \
-    "sudo apt-get update" \
+    "sudo apt-get update || out_l2 "Some apt indexes failed..."" \
     "sudo apt-get -y install ${APT_DEPS_STRICT}" \
     "sudo apt-get -y build-dep nginx nginx-extras"
 
@@ -425,7 +425,7 @@ echo -en "${KEY_HREF}: " && wget -qO - "${KEY_HREF}" | sudo apt-key add -
 
 ## Handle apt cache update
 out_line && out_l2 "Updating apt cache."
-sudo apt-get update
+sudo apt-get update || out_line && out_l2 "Some apt indexes failed..."
 
 ## Handle pre-defined dependency instalation
 out_line && out_l2 "Installing pre-set strict build dependencies."

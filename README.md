@@ -1,6 +1,6 @@
 # Nginx Mainline (Scribe Build)
 
-This script builds a set of Nginx packages against the [Ubuntu Nginx Mainline Branch](http://ppa.launchpad.net/nginx/development/ubuntu), currently at version `1.7.8`, with an emphasis on producing a streamlined final binary that includes/excluded configuration flags and adds a short list of modules used internally by [Scribe Inc.](https://scribenet.com/)—for both our own websites and those we administer. 
+This script builds a set of Nginx packages against the [Ubuntu Nginx Mainline Branch](http://ppa.launchpad.net/nginx/development/ubuntu), currently at version `1.7.8`, with an emphasis on producing a streamlined final binary that includes/excluded configuration flags and adds a short list of modules used internally by [Scribe Inc.](https://scribenet.com/)—for both our own websites and those we administer.
 
 *Very generally, this script simply pulls the latest Nginx mainline source and adds any additional files, applies any relivant patches, clones any relivant modules and external dependencies. It can then run a handlful of build operations against the resulting source.*
 
@@ -19,15 +19,15 @@ The following are key configuration items:
   Your PGP siging key, used to sign your source and package files. By default this script runs with `--force-sign` enabled, and will not exit successfully if you don't change the signing key. For more information, see the [Ubuntu Help Docs](https://help.ubuntu.com/community/GnuPrivacyGuardHowto).
 
 - `BUILD_MODE`
-  
+
   This script can run in a number of build modes that dictate its behaviour after the intial boostrap. The `BUILD_MODE` is defined by assigning it one of the following numeric options:
-  
+
   - [`1`] Generate source and binary packages locally in your current (non-sanatized) enviornment. This will result in packages that *should* be capable of installation on any target system of the same release.
 
   - [`2`] Generate source packages only (generally for a PPA upload)
-  
+
   - [`3`] Generate source packages only (and perform the PPA upload automatically)
-  
+
   - [`4`] Perform a test build using SimpleSbuild, a sanitized enviornment similar to the automated builders used by Launchpad.
 
 
@@ -38,7 +38,7 @@ The following are key configuration items:
 
 - `SBUILD_DIST`
 
-  In order to take advantage of build option `4` and run your build using SimpleSbuild locally (to mimic a similar enviornment to Launchpad's automated builders), this option must be set to an installed distribution name. Assumes SimpleSBuild has been setup per the 
+  In order to take advantage of build option `4` and run your build using SimpleSbuild locally (to mimic a similar enviornment to Launchpad's automated builders), this option must be set to an installed distribution name. Assumes SimpleSBuild has been setup per the
   [Ubuntu Wiki on SimpleSbuild](https://wiki.ubuntu.com/SimpleSbuild).
 
 - `OPT_DPKG_BUILDPACKAGE`
@@ -100,22 +100,22 @@ The following modules are compiled into Nginx with this release:
 - [`http_spdy_module`](http://nginx.org/en/docs/http/ngx_http_spdy_module.html)
 
   Provides experimental support for [SPDY](http://www.chromium.org/spdy/spdy-protocol). Currently implements [draft 3.1](http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3-1).
-  
+
 - [`nginx_auth-pam`](http://web.iti.upv.es/~sto/nginx/ngx_http_auth_pam_module-1.3/)
 
   Enables HTTP Basic Authentication agains PAM.
-  
+
 - [`nginx-development-kit`](https://github.com/simpl/ngx_devel_kit)
 
   Module that adds additional generic tools that module developers can use in their own modules (required for some of the following modules).
-  
+
 - [`nginx_upload_progress_module`](https://github.com/masterzen/nginx-upload-progress-module/tree/master)
 
   An implementation of an upload progress system, that monitors RFC1867 POST upload as they are transmitted to upstream servers.
- 
+
 - [`ngx_pagespeed`](https://github.com/pagespeed/ngx_pagespeed)
 
-  ngx_pagespeed speeds up your site and reduces page load time by automatically applying web performance best practices to 
+  ngx_pagespeed speeds up your site and reduces page load time by automatically applying web performance best practices to
   pages and associated assets (CSS, JavaScript, images) without requiring you to modify your existing content or workflow.
 
 ## Usage

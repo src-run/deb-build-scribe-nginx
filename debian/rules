@@ -61,13 +61,17 @@ scribe_configure_flags := \
 					   --with-file-aio \
 					   --with-http_geoip_module \
 					   --with-http_spdy_module \
+					   --add-module=$(MODULESDIR)/scribenet_nginx-servats-module/module \
 					   --add-module=$(MODULESDIR)/ngx_pagespeed-release-beta \
 					   --add-module=$(MODULESDIR)/alphashack_nginx_graphdat \
+					   --add-module=$(MODULESDIR)/headers-more-nginx-module \
 					   --add-module=$(MODULESDIR)/nginx-auth-pam \
 					   --add-module=$(MODULESDIR)/nginx-cache-purge \
 					   --add-module=$(MODULESDIR)/nginx-development-kit \
 					   --add-module=$(MODULESDIR)/ngx-fancyindex \
-					   --add-module=$(MODULESDIR)/nginx-upload-progress
+					   --add-module=$(MODULESDIR)/nginx-upload-progress \
+					   --add-module=$(MODULESDIR)/nginx-upstream-fair \
+					   --add-module=$(MODULESDIR)/suehiro_ngx_http_flood_detector_module
 %:
 	dh $@ --with systemd
 

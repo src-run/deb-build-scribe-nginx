@@ -1,2 +1,2 @@
 perl-use-dpkg-buildflags.patch
-ngx-http-extended-status-module.patch
+ngx-http-servats-module.patch

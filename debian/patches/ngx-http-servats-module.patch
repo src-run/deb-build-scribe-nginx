@@ -1,14 +1,16 @@
-Description: Patch Nginx for ngx_http_extended_status_module
- This patch applies the nessissary source code changes to support the extended_status_module module.
+Description: Patch Nginx for ngx_http_servats_module
+ This patch applies the nessissary source code changes to support
+ the nginx-servats-module (https://github.com/scribenet/nginx-servats-module), a
+ re-write of ngx_http_extended_status_module.
 Author: Rob Frawley 2nd <open@scribe.tools>
-Last-Updated: 2014-12-19
---- nginx-1.7.8-1+trusty2.orig/src/core/ngx_connection.c
-+++ nginx-1.7.8-1+trusty2/src/core/ngx_connection.c
+Last-Updated: 2015-03-16
+--- nginx-1.7.10-1+trusty1.orig/src/core/ngx_connection.c
++++ nginx-1.7.10-1+trusty1/src/core/ngx_connection.c
 @@ -824,6 +824,9 @@ ngx_get_connection(ngx_socket_t s, ngx_l
      ngx_uint_t         instance;
      ngx_event_t       *rev, *wev;
      ngx_connection_t  *c;
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    conn_score        *cs;
 +#endif
 
@@ -18,41 +20,41 @@ Last-Updated: 2014-12-19
      rev = c->read;
      wev = c->write;
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    cs = c->cs;
 +#endif
 +
      ngx_memzero(c, sizeof(ngx_connection_t));
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    c->cs = cs;
 +#endif
 +
      c->read = rev;
      c->write = wev;
      c->fd = s;
---- nginx-1.7.8-1+trusty2.orig/src/core/ngx_connection.h
-+++ nginx-1.7.8-1+trusty2/src/core/ngx_connection.h
+--- nginx-1.7.10-1+trusty1.orig/src/core/ngx_connection.h
++++ nginx-1.7.10-1+trusty1/src/core/ngx_connection.h
 @@ -116,6 +116,11 @@ typedef enum {
 
 
  struct ngx_connection_s {
 +
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    void               *cs;
 +#endif
 +
      void               *data;
      ngx_event_t        *read;
      ngx_event_t        *write;
---- nginx-1.7.8-1+trusty2.orig/src/event/ngx_event.c
-+++ nginx-1.7.8-1+trusty2/src/event/ngx_event.c
+--- nginx-1.7.10-1+trusty1.orig/src/event/ngx_event.c
++++ nginx-1.7.10-1+trusty1/src/event/ngx_event.c
 @@ -58,7 +58,7 @@ ngx_msec_t            ngx_accept_mutex_d
  ngx_int_t             ngx_accept_disabled;
 
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
 
  ngx_atomic_t   ngx_stat_accepted0;
  ngx_atomic_t  *ngx_stat_accepted = &ngx_stat_accepted0;
@@ -60,7 +62,7 @@ Last-Updated: 2014-12-19
 
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 
 +ngx_uint_t      ngx_num_workers;
 +size_t          shm_size = 0;
@@ -76,7 +78,7 @@ Last-Updated: 2014-12-19
      return NGX_OK;
  }
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +
 +static void
 +init_request_cnt(request_cnt *recent_request_cnt)
@@ -118,7 +120,7 @@ Last-Updated: 2014-12-19
 
      if (ngx_accept_mutex_ptr) {
 -        return NGX_OK;
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +        shm.addr = (u_char *) ngx_accept_mutex_ptr;
 +        shm.size = shm_size;
 +        ngx_shm_free(&shm);
@@ -133,7 +135,7 @@ Last-Updated: 2014-12-19
             + cl;         /* ngx_temp_number */
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
 
      size += cl           /* ngx_stat_accepted */
             + cl          /* ngx_stat_handled */
@@ -141,7 +143,7 @@ Last-Updated: 2014-12-19
 
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +
 +    if (WORKER_SCORE_LEN < sizeof(worker_score)) {
 +        ngx_log_error(NGX_LOG_EMERG, cycle->log, 0, "worker_score(%d) too large", sizeof(worker_score ));
@@ -163,7 +165,7 @@ Last-Updated: 2014-12-19
      ngx_random_number = (tp->msec << 16) + ngx_pid;
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
 
      ngx_stat_accepted = (ngx_atomic_t *) (shared + 3 * cl);
      ngx_stat_handled = (ngx_atomic_t *) (shared + 4 * cl);
@@ -171,7 +173,7 @@ Last-Updated: 2014-12-19
 
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +
 +    ngx_num_workers = ccf->worker_processes;
 +
@@ -189,7 +191,7 @@ Last-Updated: 2014-12-19
 
      c = cycle->connections;
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    {
 +        ngx_time_t  *tp;
 +        conn_score  *cs;
@@ -223,14 +225,14 @@ Last-Updated: 2014-12-19
      cycle->read_events = ngx_alloc(sizeof(ngx_event_t) * cycle->connection_n,
                                     cycle->log);
      if (cycle->read_events == NULL) {
---- nginx-1.7.8-1+trusty2.orig/src/event/ngx_event.h
-+++ nginx-1.7.8-1+trusty2/src/event/ngx_event.h
+--- nginx-1.7.10-1+trusty1.orig/src/event/ngx_event.h
++++ nginx-1.7.10-1+trusty1/src/event/ngx_event.h
 @@ -8,7 +8,9 @@
  #ifndef _NGX_EVENT_H_INCLUDED_
  #define _NGX_EVENT_H_INCLUDED_
 
 -
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +#include <sys/times.h>
 +#endif
  #include <ngx_config.h>
@@ -241,7 +243,7 @@ Last-Updated: 2014-12-19
 
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
 
  extern ngx_atomic_t  *ngx_stat_accepted;
  extern ngx_atomic_t  *ngx_stat_handled;
@@ -249,7 +251,7 @@ Last-Updated: 2014-12-19
 
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +
 +#define  SCORE__REQUEST_LEN            128
 +#define  SCORE__CLIENT_LEN              32
@@ -334,14 +336,14 @@ Last-Updated: 2014-12-19
 
  #define NGX_UPDATE_TIME         1
  #define NGX_POST_EVENTS         2
---- nginx-1.7.8-1+trusty2.orig/src/event/ngx_event_accept.c
-+++ nginx-1.7.8-1+trusty2/src/event/ngx_event_accept.c
+--- nginx-1.7.10-1+trusty1.orig/src/event/ngx_event_accept.c
++++ nginx-1.7.10-1+trusty1/src/event/ngx_event_accept.c
 @@ -134,7 +134,7 @@ ngx_event_accept(ngx_event_t *ev)
              return;
          }
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
          (void) ngx_atomic_fetch_add(ngx_stat_accepted, 1);
  #endif
 
@@ -350,11 +352,11 @@ Last-Updated: 2014-12-19
          }
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
          (void) ngx_atomic_fetch_add(ngx_stat_active, 1);
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +        set_conn_active(c);
 +        set_conn_mode(c, SERVER_READY);
 +#endif
@@ -367,7 +369,7 @@ Last-Updated: 2014-12-19
          c->number = ngx_atomic_fetch_add(ngx_connection_counter, 1);
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
          (void) ngx_atomic_fetch_add(ngx_stat_handled, 1);
  #endif
 
@@ -376,24 +378,24 @@ Last-Updated: 2014-12-19
      }
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
      (void) ngx_atomic_fetch_add(ngx_stat_active, -1);
  #endif
 +
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    set_conn_inactive(c);
 +    set_conn_mode(c, SERVER_DEAD);
 +#endif
  }
 
 
---- nginx-1.7.8-1+trusty2.orig/src/http/modules/ngx_http_gzip_filter_module.c
-+++ nginx-1.7.8-1+trusty2/src/http/modules/ngx_http_gzip_filter_module.c
+--- nginx-1.7.10-1+trusty1.orig/src/http/modules/ngx_http_gzip_filter_module.c
++++ nginx-1.7.10-1+trusty1/src/http/modules/ngx_http_gzip_filter_module.c
 @@ -862,6 +862,15 @@ ngx_http_gzip_filter_deflate(ngx_http_re
 
          r->connection->buffered &= ~NGX_HTTP_GZIP_BUFFERED;
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +        {
 +            conn_score  *cs = r->connection->cs;
 +
@@ -405,20 +407,20 @@ Last-Updated: 2014-12-19
          return NGX_OK;
      }
 
---- nginx-1.7.8-1+trusty2.orig/src/http/ngx_http_request.c
-+++ nginx-1.7.8-1+trusty2/src/http/ngx_http_request.c
+--- nginx-1.7.10-1+trusty1.orig/src/http/ngx_http_request.c
++++ nginx-1.7.10-1+trusty1/src/http/ngx_http_request.c
 @@ -601,12 +601,23 @@ ngx_http_create_request(ngx_connection_t
      ctx->current_request = r;
      r->log_handler = ngx_http_log_error_handler;
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
      (void) ngx_atomic_fetch_add(ngx_stat_reading, 1);
      r->stat_reading = 1;
      (void) ngx_atomic_fetch_add(ngx_stat_requests, 1);
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    {
 +        conn_score  *cs = (conn_score *) c->cs;
 +        ngx_time_t  *tp = ngx_timeofday();
@@ -437,14 +439,14 @@ Last-Updated: 2014-12-19
      }
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
      (void) ngx_atomic_fetch_add(ngx_stat_reading, -1);
      r->stat_reading = 0;
      (void) ngx_atomic_fetch_add(ngx_stat_writing, 1);
      r->stat_writing = 1;
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    my_worker->mode = SERVER_BUSY_WRITE;
 +    set_conn_mode(c, SERVER_BUSY_WRITE);
 +#endif
@@ -456,7 +458,7 @@ Last-Updated: 2014-12-19
  }
 
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +
 +static inline void
 +update_request_cnt(worker_score *worker, conn_score *cs, uint32_t sec)
@@ -519,7 +521,7 @@ Last-Updated: 2014-12-19
      ngx_http_log_ctx_t        *ctx;
      ngx_http_core_loc_conf_t  *clcf;
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    conn_score  *cs = r->connection->cs;
 +    ngx_time_t  *tp ;
 +#endif
@@ -532,7 +534,7 @@ Last-Updated: 2014-12-19
      }
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
 
      if (r->stat_reading) {
          (void) ngx_atomic_fetch_add(ngx_stat_reading, -1);
@@ -540,7 +542,7 @@ Last-Updated: 2014-12-19
 
      log->action = "logging request";
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    my_worker->mode = SERVER_BUSY_LOG;
 +    set_conn_mode(r->connection, SERVER_BUSY_LOG);
 +
@@ -590,7 +592,7 @@ Last-Updated: 2014-12-19
          }
      }
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    my_worker->mode = SERVER_READY;
 +    set_conn_mode(r->connection, SERVER_READY);
 +#endif
@@ -603,11 +605,11 @@ Last-Updated: 2014-12-19
  #endif
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
      (void) ngx_atomic_fetch_add(ngx_stat_active, -1);
  #endif
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    set_conn_inactive(c);
 +    set_conn_mode(c, SERVER_DEAD);
 +#endif
@@ -615,49 +617,49 @@ Last-Updated: 2014-12-19
      c->destroyed = 1;
 
      pool = c->pool;
---- nginx-1.7.8-1+trusty2.orig/src/http/ngx_http_request.h
-+++ nginx-1.7.8-1+trusty2/src/http/ngx_http_request.h
+--- nginx-1.7.10-1+trusty1.orig/src/http/ngx_http_request.h
++++ nginx-1.7.10-1+trusty1/src/http/ngx_http_request.h
 @@ -530,7 +530,7 @@ struct ngx_http_request_s {
      unsigned                          single_range:1;
      unsigned                          disable_not_modified:1;
 
 -#if (NGX_STAT_STUB)
-+#if (NGX_STAT_STUB || NGX_STAT_EXTENDED)
++#if (NGX_STAT_STUB || NGX_SERVATS)
      unsigned                          stat_reading:1;
      unsigned                          stat_writing:1;
  #endif
---- nginx-1.7.8-1+trusty2.orig/src/os/unix/ngx_process.c
-+++ nginx-1.7.8-1+trusty2/src/os/unix/ngx_process.c
+--- nginx-1.7.10-1+trusty1.orig/src/os/unix/ngx_process.c
++++ nginx-1.7.10-1+trusty1/src/os/unix/ngx_process.c
 @@ -35,6 +35,10 @@ ngx_socket_t     ngx_channel;
  ngx_int_t        ngx_last_process;
  ngx_process_t    ngx_processes[NGX_MAX_PROCESSES];
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +ngx_int_t        old_ngx_last_process = 0;
 +ngx_process_t    old_ngx_processes[NGX_MAX_PROCESSES];
 +#endif
 
  ngx_signal_t  signals[] = {
      { ngx_signal_value(NGX_RECONFIGURE_SIGNAL),
---- nginx-1.7.8-1+trusty2.orig/src/os/unix/ngx_process.h
-+++ nginx-1.7.8-1+trusty2/src/os/unix/ngx_process.h
+--- nginx-1.7.10-1+trusty1.orig/src/os/unix/ngx_process.h
++++ nginx-1.7.10-1+trusty1/src/os/unix/ngx_process.h
 @@ -84,5 +84,9 @@ extern ngx_int_t      ngx_process_slot;
  extern ngx_int_t      ngx_last_process;
  extern ngx_process_t  ngx_processes[NGX_MAX_PROCESSES];
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +extern ngx_int_t      old_ngx_last_process;
 +extern ngx_process_t  old_ngx_processes[NGX_MAX_PROCESSES];
 +#endif
 
  #endif /* _NGX_PROCESS_H_INCLUDED_ */
---- nginx-1.7.8-1+trusty2.orig/src/os/unix/ngx_process_cycle.c
-+++ nginx-1.7.8-1+trusty2/src/os/unix/ngx_process_cycle.c
+--- nginx-1.7.10-1+trusty1.orig/src/os/unix/ngx_process_cycle.c
++++ nginx-1.7.10-1+trusty1/src/os/unix/ngx_process_cycle.c
 @@ -241,6 +241,15 @@ ngx_master_process_cycle(ngx_cycle_t *cy
 
              ngx_log_error(NGX_LOG_NOTICE, cycle->log, 0, "reconfiguring");
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +            old_ngx_last_process = ngx_last_process;
 +            for (i = 0; i < old_ngx_last_process; i++)
 +                old_ngx_processes[i] = ngx_processes[i];
@@ -673,7 +675,7 @@ Last-Updated: 2014-12-19
 
      ch.fd = -1;
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    if ( NGX_CMD_QUIT == ch.command && 0 < old_ngx_last_process )
 +    {
 +        for (i = 0; i < old_ngx_last_process; i++) {
@@ -738,7 +740,7 @@ Last-Updated: 2014-12-19
 
      ngx_setproctitle("worker process");
 
-+#if (NGX_STAT_EXTENDED)
++#if (NGX_SERVATS)
 +    {
 +        my_worker = (worker_score *) ((char *) workers + WORKER_SCORE_LEN * ngx_process_slot);
 +        ngx_time_t  *tp = ngx_timeofday();
