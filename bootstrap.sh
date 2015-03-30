@@ -35,7 +35,7 @@ SBUILD_DIST="${BUILD_FOR_CODENAME}-amd64"
 ## 2=source only for ppa upload
 ## 3=source only and do ppa upload
 ## 4=perform test build with sbuild
-BUILD_MODE=4
+BUILD_MODE=1
 
 ## Local package cache
 LOCAL_PACKAGE_CACHE=1
@@ -544,9 +544,7 @@ for item_i in "${!MOD_GIT_NAME[@]}"; do
             "  rm -f "$SERVATS_PATCH_TMP_BD"" \
             "  rm -f "$SERVATS_PATCH_DEST"" \
             "  cp "${SERVATS_PATCH}" "$SERVATS_PATCH_TMP_BD"" \
-            "  cat "$SERVATS_PATCH_TMP_HR" "$SERVATS_PATCH_TMP_BD" | sudo tee "$SERVATS_PATCH_DEST" > /dev/null" \
-            "  rm -f "$SERVATS_PATCH_TMP_HR"" \
-            "  rm -f "$SERVATS_PATCH_TMP_BD""
+            "  cat "$SERVATS_PATCH_TMP_HR" "$SERVATS_PATCH_TMP_BD" | sudo tee "$SERVATS_PATCH_DEST" > /dev/null"
 
         SERVATS_PATCH="${DIR_NGINX_MODULES}/${item_path_file}/patches/http_servats_nginx_${VER_NGINX}.patch"
         SERVATS_PATCH_TMP_HR="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch.header"
