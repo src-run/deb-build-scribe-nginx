@@ -4,3 +4,5 @@
 /patches
 /.fuse*
 *.subl*.tmp
+/debian/patches/http_servats_nginx.patch
+/debian/patches/http_servats_nginx.patch.body

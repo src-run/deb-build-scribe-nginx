@@ -13,7 +13,7 @@ set -e
 ##
 
 ## Software versions
-VER_NGINX=1.7.10
+VER_NGINX=1.7.11
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.3
 
@@ -27,7 +27,7 @@ BUILD_FOR_RELEASE="$(lsb_release -r | cut -f2 2> /dev/null)"
 
 ## Sbuild distribution name (assumes sbuild has been configured per
 ## instructions at https://wiki.ubuntu.com/SimpleSbuild)
-SBUILD_DIST="${BUILD_FOR_CODENAME}-amd64-shm"
+SBUILD_DIST="${BUILD_FOR_CODENAME}-amd64"
 #SBUILD_DIST="utopic-amd64-shm"
 
 ## Mode
@@ -58,7 +58,7 @@ MOD_GIT_NAME=(
 MOD_GIT_VERSION=(
     "master"
     "master"
-    "1.0.0-beta2"
+    "master"
 )
 
 ## Files to create patches against original source
@@ -77,7 +77,7 @@ NEW_FILES=(
     "debian/nginx-scribe.postinst"
     "debian/nginx-scribe.prerm"
     "debian/source/include-binaries"
-    "debian/patches/ngx-http-servats-module.patch"
+    "debian/patches/http_servats_nginx.patch"
     "debian/patches/series"
 )
 
@@ -359,7 +359,7 @@ else
         "  Build Type      -> $(if [[ "${BUILD_MODE}" == 1 ]]; then echo "Build Source and Packages"; elif [[ "${BUILD_MODE}" == 2 ]]; then echo "Build Source Only"; elif [[ "${BUILD_MODE}" == 3 ]]; then echo "Build Source and Uploading to Launchpad"; elif [[ "${BUILD_MODE}" == 4 ]]; then echo "Build Source Performing SimpleSBuild"; else echo "Unsuported Build Mode (That isn't good!)"; fi)"
 fi
 
-VER_DEB_NGINX="${VER_NGINX}-1+${NAM_BUILD_UBUNTU}2"
+VER_DEB_NGINX="${VER_NGINX}-1+${NAM_BUILD_UBUNTU}0"
 OPT_DEBUILD="-S -sa -k${BUILD_SIGNING_KEY_ID}"
 
 ##
@@ -440,13 +440,13 @@ sudo apt-get -y build-dep nginx nginx-extras
 ##
 
 ## User output
-out_l1 "Local Apt-Cache"
+#out_l1 "Local Apt-Cache"
 
 ## Add to apt config
-out_l2 \
-    "Adding apt-config:" \
-    "  Apt Cache Config -> echo 'Acquire::http::Proxy "http://127.0.0.1:3142";' | sudo tee /etc/apt/apt.conf.d/01acng"
-echo 'Acquire::http::Proxy "http://127.0.0.1:3142";' | sudo tee /etc/apt/apt.conf.d/01acng > /dev/null 2>&1
+#out_l2 \
+#    "Adding apt-config:" \
+#    "  Apt Cache Config -> echo 'Acquire::http::Proxy "http://127.0.0.1:3142";' | sudo tee /etc/apt/apt.conf.d/01acng"
+#echo 'Acquire::http::Proxy "http://127.0.0.1:3142";' | sudo tee /etc/apt/apt.conf.d/01acng > /dev/null 2>&1
 
 ## User output
 out_l1 "Configure Current user for SBuild"
@@ -493,6 +493,144 @@ out_line && out_l2 \
     "  Destination -> nginx_${VER_DEB_NGINX}.orig.tar.gz"
 cd "${DIR_BUILD}" &&
     ln -s "nginx_${VER_NGINX}.orig.tar.gz" "nginx_${VER_DEB_NGINX}.orig.tar.gz"
+
+##
+## Handle Git Modules
+##
+
+## User ouput
+out_l1 "Retrieving Nginx Modules"
+
+## For each requested module...
+for item_i in "${!MOD_GIT_NAME[@]}"; do
+
+    # Get git branch/tag defined for package
+    item_version_git="${MOD_GIT_VERSION[$item_i]}"
+
+    # Get git relative and absolute path
+    item_name_git="${MOD_GIT_NAME[$item_i]}"
+    item_path_git="https://github.com/${item_name_git}.git"
+
+    # Create local filesystem dirname from relative path by substituting dir sep for underscore
+    item_path_file="$(echo ${item_name_git} | tr / _)"
+
+    # Handle fetching of git source and checkout of branch/tag
+    out_l2 \
+        "Fetching ${item_name_git}:" \
+        "  Git Remote  -> ${item_path_git}" \
+        "  Branch/Tag  -> ${item_version_git}" \
+        "  Destination -> ${item_path_file}"
+    cd "${DIR_NGINX_MODULES}" &&
+        git clone "${item_path_git}" "${item_path_file}" &&
+        cd "${item_path_file}" &&
+        git checkout "${item_version_git}"
+
+    # Remove binary files in docs for scribenet/nginx-servats-module
+    if [[ "${item_name_git}" == "scribenet/nginx-servats-module" ]]; then
+
+        # Remove binary test files
+        out_line && out_l2 \
+            "Cleaning ${item_name_git} source:" \
+            "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/docs/images/"
+        rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/docs/images/"
+
+        # Remove binary test files
+        out_line && out_l2 \
+            "Creating patch file for ${item_name_git} for Nginx version:" \
+            "  SERVATS_PATCH="${DIR_NGINX_MODULES}/${item_path_file}/patches/http_servats_nginx_${VER_NGINX}.patch"" \
+            "  SERVATS_PATCH_TMP_HR="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch.header"" \
+            "  SERVATS_PATCH_TMP_BD="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch.body"" \
+            "  SERVATS_PATCH_DEST="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch"" \
+            "  rm -f "$SERVATS_PATCH_TMP_BD"" \
+            "  rm -f "$SERVATS_PATCH_DEST"" \
+            "  cp "${SERVATS_PATCH}" "$SERVATS_PATCH_TMP_BD"" \
+            "  cat "$SERVATS_PATCH_TMP_HR" "$SERVATS_PATCH_TMP_BD" | sudo tee "$SERVATS_PATCH_DEST" > /dev/null" \
+            "  rm -f "$SERVATS_PATCH_TMP_HR"" \
+            "  rm -f "$SERVATS_PATCH_TMP_BD""
+
+        SERVATS_PATCH="${DIR_NGINX_MODULES}/${item_path_file}/patches/http_servats_nginx_${VER_NGINX}.patch"
+        SERVATS_PATCH_TMP_HR="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch.header"
+        SERVATS_PATCH_TMP_BD="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch.body"
+        SERVATS_PATCH_DEST="${DIR_SELF_DEBIAN}/patches/http_servats_nginx.patch"
+
+        if [[ ! -f ${SERVATS_PATCH} ]]; then
+
+            out_error "Version of Nginx ${VER_NGINX} not supported by ${item_name_git}. No patch file found at ${SERVATS_PATCH}"
+
+        fi
+
+        rm -f "$SERVATS_PATCH_TMP_BD"
+        rm -f "$SERVATS_PATCH_DEST"
+        cp "${SERVATS_PATCH}" "$SERVATS_PATCH_TMP_BD"
+        cat "$SERVATS_PATCH_TMP_HR" "$SERVATS_PATCH_TMP_BD" | sudo tee "$SERVATS_PATCH_DEST" > /dev/null
+
+    fi
+
+    # Perform submodule init for alphashack/nginx_graphdat
+    if [[ "${item_name_git}" == "alphashack/nginx_graphdat" ]]; then
+
+        # Init/update submodule
+        out_line && out_l2 \
+            "Addition src actions for ${item_name_git}:" \
+            "  -> git submodule init" \
+            "  -> git submodule update"
+        cd "${DIR_NGINX_MODULES}" &&
+            cd "${item_path_file}" &&
+            git submodule init &&
+            git submodule update
+
+        # Remove binary test files
+        out_line && out_l2 \
+            "Cleaning ${item_name_git} source:" \
+            "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
+        rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
+
+    fi
+
+    # Output empty line
+    out_line
+
+done
+
+## Get Google PageSpeed Nginx module
+out_l2 \
+    "Fetching ngx_pagespeed:" \
+    "  Remote      -> https://github.com/pagespeed/ngx_pagespeed/archive/release-${VER_NGX_MOD_PAGESPEED}-beta.zip" \
+    "  Version     -> ${VER_NGX_MOD_PAGESPEED}" \
+    "  Destination -> ngx_pagespeed-release-beta"
+cd "${DIR_NGINX_MODULES}" &&
+    wget "https://github.com/pagespeed/ngx_pagespeed/archive/release-${VER_NGX_MOD_PAGESPEED}-beta.zip" &&
+    unzip "release-${VER_NGX_MOD_PAGESPEED}-beta.zip" &&
+    mv "ngx_pagespeed-release-${VER_NGX_MOD_PAGESPEED}-beta" "ngx_pagespeed-release-beta" &&
+    rm "release-${VER_NGX_MOD_PAGESPEED}-beta.zip"
+
+## Output empty line
+out_line
+
+## Get Google PageSpeed PSOL dependency
+out_l2 "Fetching ngx_pagespeed_psol:" \
+    "  Remote      -> https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz" \
+    "  Version     -> ${VER_NGX_MOD_PAGESPEED}" \
+    "  Destination -> ngx_pagespeed-release-beta/${VER_NGX_MOD_PAGESPEED}.tar.gz"
+cd "ngx_pagespeed-release-beta" &&
+    wget "https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz"
+
+##
+## Handle PCRE
+##
+
+## User output
+out_l1 "Retreiving PCRE Source"
+
+## Download and extract PCRE source
+out_l2 \
+    "Fetching PCRE:" \
+    "  Remote      -> http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download" \
+    "  Version     -> ${VER_PCRE}" \
+    "  Destination -> ${DIR_NGINX_EXTDEPS}/pcre-${VER_PCRE}.tar.bz2"
+mkdir -p "${DIR_NGINX_EXTDEPS}" &&
+    cd "${DIR_NGINX_EXTDEPS}" &&
+    wget -O "pcre-${VER_PCRE}.tar.bz2" "http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download"
 
 ##
 ## Install scribe debian install/lintian-overrides/postinst/prerm files
@@ -568,114 +706,6 @@ do
     sed -i "s,%VER_PCRE%,${VER_PCRE},g" "${DIR_NGINX}/${update_ver_file}"
 
 done
-
-##
-## Handle Git Modules
-##
-
-## User ouput
-out_l1 "Retrieving Nginx Modules"
-
-## For each requested module...
-for item_i in "${!MOD_GIT_NAME[@]}"; do
-
-    # Get git branch/tag defined for package
-    item_version_git="${MOD_GIT_VERSION[$item_i]}"
-
-    # Get git relative and absolute path
-    item_name_git="${MOD_GIT_NAME[$item_i]}"
-    item_path_git="https://github.com/${item_name_git}.git"
-
-    # Create local filesystem dirname from relative path by substituting dir sep for underscore
-    item_path_file="$(echo ${item_name_git} | tr / _)"
-
-    # Handle fetching of git source and checkout of branch/tag
-    out_l2 \
-        "Fetching ${item_name_git}:" \
-        "  Git Remote  -> ${item_path_git}" \
-        "  Branch/Tag  -> ${item_version_git}" \
-        "  Destination -> ${item_path_file}"
-    cd "${DIR_NGINX_MODULES}" &&
-        git clone "${item_path_git}" "${item_path_file}" &&
-        cd "${item_path_file}" &&
-        git checkout "${item_version_git}"
-
-    # Remove binary files in docs for scribenet/nginx-servats-module
-    if [[ "${item_name_git}" == "scribenet/nginx-servats-module" ]]; then
-
-        # Remove binary test files
-        out_line && out_l2 \
-            "Cleaning ${item_name_git} source:" \
-            "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/docs/images/"
-        rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/docs/images/"
-
-    fi
-
-    # Perform submodule init for alphashack/nginx_graphdat
-    if [[ "${item_name_git}" == "alphashack/nginx_graphdat" ]]; then
-
-        # Init/update submodule
-        out_line && out_l2 \
-            "Addition src actions for ${item_name_git}:" \
-            "  -> git submodule init" \
-            "  -> git submodule update"
-        cd "${DIR_NGINX_MODULES}" &&
-            cd "${item_path_file}" &&
-            git submodule init &&
-            git submodule update
-
-        # Remove binary test files
-        out_line && out_l2 \
-            "Cleaning ${item_name_git} source:" \
-            "  Removing Dir -> ${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
-        rm -fr "${DIR_NGINX_MODULES}/${item_path_file}/lib/module_graphdat/msgpack/test/"
-
-    fi
-
-    # Output empty line
-    out_line
-
-done
-
-## Get Google PageSpeed Nginx module
-out_l2 \
-    "Fetching ngx_pagespeed:" \
-    "  Remote      -> https://github.com/pagespeed/ngx_pagespeed/archive/release-${VER_NGX_MOD_PAGESPEED}-beta.zip" \
-    "  Version     -> ${VER_NGX_MOD_PAGESPEED}" \
-    "  Destination -> ngx_pagespeed-release-beta"
-cd "${DIR_NGINX_MODULES}" &&
-    wget "https://github.com/pagespeed/ngx_pagespeed/archive/release-${VER_NGX_MOD_PAGESPEED}-beta.zip" &&
-    unzip "release-${VER_NGX_MOD_PAGESPEED}-beta.zip" &&
-    mv "ngx_pagespeed-release-${VER_NGX_MOD_PAGESPEED}-beta" "ngx_pagespeed-release-beta" &&
-    rm "release-${VER_NGX_MOD_PAGESPEED}-beta.zip"
-
-## Output empty line
-out_line
-
-## Get Google PageSpeed PSOL dependency
-out_l2 "Fetching ngx_pagespeed_psol:" \
-    "  Remote      -> https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz" \
-    "  Version     -> ${VER_NGX_MOD_PAGESPEED}" \
-    "  Destination -> ngx_pagespeed-release-beta/${VER_NGX_MOD_PAGESPEED}.tar.gz"
-cd "ngx_pagespeed-release-beta" &&
-    wget "https://dl.google.com/dl/page-speed/psol/${VER_NGX_MOD_PAGESPEED}.tar.gz"
-
-##
-## Handle PCRE
-##
-
-## User output
-out_l1 "Retreiving PCRE Source"
-
-## Download and extract PCRE source
-out_l2 \
-    "Fetching PCRE:" \
-    "  Remote      -> http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download" \
-    "  Version     -> ${VER_PCRE}" \
-    "  Destination -> ${DIR_NGINX_EXTDEPS}/pcre-${VER_PCRE}.tar.bz2"
-mkdir -p "${DIR_NGINX_EXTDEPS}" &&
-    cd "${DIR_NGINX_EXTDEPS}" &&
-    wget -O "pcre-${VER_PCRE}.tar.bz2" "http://sourceforge.net/projects/pcre/files/pcre/${VER_PCRE}/pcre-${VER_PCRE}.tar.bz2/download"
 
 ##
 ## Handle Nginx compilation
