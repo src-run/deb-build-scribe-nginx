@@ -3,4 +3,4 @@ Description: Patch Nginx for ngx_http_servats_module
  the nginx-servats-module (https://github.com/scribenet/nginx-servats-module), a
  re-write of ngx_http_extended_status_module.
 Author: Rob Frawley 2nd <open@scribe.tools>
-Last-Updated: 2015-03-29
+Last-Updated: 2015-05-29

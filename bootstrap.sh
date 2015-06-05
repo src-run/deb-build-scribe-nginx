@@ -13,7 +13,7 @@ set -e
 ##
 
 ## Software versions
-VER_NGINX=1.7.11
+VER_NGINX=1.7.12
 VER_PCRE=8.36
 VER_NGX_MOD_PAGESPEED=1.9.32.3
 
@@ -35,10 +35,10 @@ SBUILD_DIST="${BUILD_FOR_CODENAME}-amd64"
 ## 2=source only for ppa upload
 ## 3=source only and do ppa upload
 ## 4=perform test build with sbuild
-BUILD_MODE=1
+BUILD_MODE=3
 
 ## Local package cache
-LOCAL_PACKAGE_CACHE=1
+LOCAL_PACKAGE_CACHE=0
 
 ## Action delay
 ACTION_DELAY=0
@@ -122,12 +122,14 @@ KEY_HREF="http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0x00A6F0A3C
 VER_UBUNTU=(
     "14.04"
     "14.10"
+    "15.04"
 )
 NAM_UBUNTU=(
     "trusty"
     "utopic"
+    "vivid"
 )
-VER_SELF=0.1.0
+VER_SELF=0.1.1
 
 ##
 ## Helper functions

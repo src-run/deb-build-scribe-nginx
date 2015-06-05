@@ -1,10 +1,38 @@
-nginx (1.7.11-1+trusty0-scribe1) trusty; urgency=high
+nginx (1.7.12-1+vivid0-scribe0) vivid; urgency=high
 
-  * Scribe's build of nginx@1.7.11 (mainline) for trusty
+  * Scribe's build of nginx@1.7.12 (mainline) for vivid
 
  -- Rob Frawley 2nd <open@scribe.tools>  Tue, 29 Mar 2015 22:55:00 -0500
 
-nginx (1.7.11-1+trusty0) trusty; urgency=medium
+nginx (1.7.12-1+vivid0) vivid; urgency=medium
+
+  * New upstream release (1.7.12)
+
+ -- Thomas Ward <teward@ubuntu.com>  Tue, 07 Apr 2015 18:59:23 -0400
+
+nginx (1.7.12-0) UNRELEASED; urgency=medium
+
+  * New upstream release
+  * Changes with nginx 1.7.12:
+    * Feature: now the "tcp_nodelay" directive works with backend SSL
+      connections.
+    * Feature: now thread pools can be used to read cache file headers.
+    * Bugfix: in the "proxy_request_buffering" directive.
+    * Bugfix: a segmentation fault might occur in a worker process when
+      using thread pools on Linux.
+    * Bugfix: in error handling when using the "ssl_stapling" directive.
+      Thanks to Filipe da Silva.
+    * Bugfix: in the ngx_http_spdy_module.
+
+ -- Thomas Ward <teward@ubuntu.com>  Tue, 07 Apr 2015 18:59:10 -0400
+
+nginx (1.7.11-1+vivid0-scribe1) vivid; urgency=high
+
+  * Scribe's build of nginx@1.7.11 (mainline) for vivid
+
+ -- Rob Frawley 2nd <open@scribe.tools>  Tue, 29 Mar 2015 22:55:00 -0500
+
+nginx (1.7.11-1+vivid0) vivid; urgency=medium
 
   * New upstream release (1.7.11)
   * Initial upload to Trusty
@@ -47,16 +75,16 @@ nginx (1.7.11-0) UNRELEASED; urgency=medium
 
  -- Thomas Ward <teward@ubuntu.com>  Wed, 25 Mar 2015 11:47:25 -0400
 
-nginx (1.7.10-1+trusty2-scribe2) trusty; urgency=high
+nginx (1.7.10-1+vivid2-scribe2) vivid; urgency=high
 
-  * Scribe's build of nginx@1.7.10 (mainline) for trusty
+  * Scribe's build of nginx@1.7.10 (mainline) for vivid
     * Updated scribenet/nginx-servats-module module to 1.0.0-beta2
 
  -- Rob Frawley 2nd <open@scribe.tools>  Tue, 16 Mar 2015 23:00:00 -0500
 
-nginx (1.7.10-1+trusty2-scribe1) trusty; urgency=high
+nginx (1.7.10-1+vivid2-scribe1) vivid; urgency=high
 
-  * Scribe's build of nginx@1.7.10 (mainline) for trusty
+  * Scribe's build of nginx@1.7.10 (mainline) for vivid
     * Notes:
       * Be advised: We have retired the previously used extended status module
         (nginx-modules/ngx_http_extended_status_module) in favor of our internal
@@ -112,13 +140,13 @@ nginx (1.7.10-1+trusty2-scribe1) trusty; urgency=high
 
  -- Rob Frawley 2nd <open@scribe.tools>  Tue, 16 Mar 2015 07:05:00 -0500
 
-nginx (1.7.10-1+trusty1-scribe0) trusty; urgency=medium
+nginx (1.7.10-1+vivid1-scribe0) vivid; urgency=medium
 
   * New Scribe build against Thmas Ward's Nginx Mainline 1.7.10 build
 
  -- Rob Frawley 2nd <open@scribe.tools>  Tue, 10 Mar 2015 00:20:00 -0500
 
-nginx (1.7.10-1+trusty0) trusty; urgency=medium
+nginx (1.7.10-1+vivid0) vivid; urgency=medium
 
   * New upstream release (1.7.10)
   * Initial upload to Trusty
@@ -148,13 +176,13 @@ nginx (1.7.10-0) UNRELEASED; urgency=medium
 
  -- Thomas Ward <teward@ubuntu.com>  Tue, 10 Feb 2015 12:49:40 -0500
 
-nginx (1.7.9-1+trusty2-scribe1) trusty; urgency=medium
+nginx (1.7.9-1+vivid2-scribe1) vivid; urgency=medium
 
   * New build against Thmas Ward's Nginx Mainline 1.7.9 build
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 17 Jan 2015 00:30:00 -0500
 
-nginx (1.7.9-1+trusty2) trusty; urgency=medium
+nginx (1.7.9-1+vivid2) vivid; urgency=medium
 
   * New upstream release (1.7.9 - changes detailed in 1.7.9-0 entry)
   * Resynced packaging with Debian Unstable.
@@ -196,7 +224,7 @@ nginx (1.7.9-0) UNRELEASED; urgency=medium
 
  -- Thomas Ward <teward@ubuntu.com>  Fri, 16 Jan 2015 13:46:59 -0500
 
-nginx (1.7.8-1+trusty2-scribe2) trusty; urgency=high
+nginx (1.7.8-1+vivid2-scribe2) vivid; urgency=high
 
   * Addition of the following modules:
     - ngx_http_extended_status_module
@@ -205,13 +233,13 @@ nginx (1.7.8-1+trusty2-scribe2) trusty; urgency=high
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 19 Dec 2014 05:30:00 -0500
 
-nginx (1.7.8-1+trusty2-scribe1) trusty; urgency=high
+nginx (1.7.8-1+vivid2-scribe1) vivid; urgency=high
 
-  * New build against trusty2 and utopic2
+  * New build against vivid2 and utopic2
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 18 Dec 2014 21:30:00 -0500
 
-nginx (1.7.8-1+trusty0-scribe0) trusty; urgency=high
+nginx (1.7.8-1+vivid0-scribe0) vivid; urgency=high
 
   * Updated to Nginx 1.7.8 using Tomas Ward's most-recent mainline build.
   * Notable changes (for Scribe Inc):
@@ -220,7 +248,7 @@ nginx (1.7.8-1+trusty0-scribe0) trusty; urgency=high
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 15 Dec 2014 04:00:00 -0500
 
-nginx (1.7.8-1+trusty1) trusty; urgency=medium
+nginx (1.7.8-1+vivid1) vivid; urgency=medium
 
   * Changes made to files and folders in debian/modules/:
     - nginx-lua: Update module to 0.9.13 from upstream.
@@ -228,7 +256,7 @@ nginx (1.7.8-1+trusty1) trusty; urgency=medium
 
  -- Thomas Ward <teward@ubuntu.com>  Sun, 14 Dec 2014 19:46:36 -0500
 
-nginx (1.7.8-1+trusty0) trusty; urgency=medium
+nginx (1.7.8-1+vivid0) vivid; urgency=medium
 
   * debian/: Resync with Debian Unstable
   * Remaining changes:
@@ -279,26 +307,26 @@ nginx (1.7.8-1) UNRELEASED; urgency=medium
 
  -- Thomas Ward <teward@ubuntu.com>  Sat, 13 Dec 2014 20:50:16 -0500
 
-nginx (1.7.7-1+trusty0-scribe5) trusty; urgency=high
+nginx (1.7.7-1+vivid0-scribe5) vivid; urgency=high
 
   * Works using sbuild with help from https://wiki.ubuntu.com/SimpleSbuild
     and direction from @cjwatson on irc.freenode.net - thanks!
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 07:50:00 -0500
 
-nginx (1.7.7-1+trusty0-scribe4) trusty; urgency=high
+nginx (1.7.7-1+vivid0-scribe4) vivid; urgency=high
 
   * This won't work...perhaps #launchpad can help after this build fails...
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 05:00:00 -0500
 
-nginx (1.7.7-1+trusty0-scribe3) trusty; urgency=high
+nginx (1.7.7-1+vivid0-scribe3) vivid; urgency=high
 
   * Possible fixes for build errors
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 04:10:50 -0500
 
-nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
+nginx (1.7.7-1+vivid0-scribe2) vivid; urgency=high
 
   * Support for utopic added
   * Cleaned up dependencies for scribe-nginx
@@ -306,13 +334,13 @@ nginx (1.7.7-1+trusty0-scribe2) trusty; urgency=high
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 13 Dec 2014 00:53:50 -0500
 
-nginx (1.7.7-1+trusty0-scribe1) trusty; urgency=high
+nginx (1.7.7-1+vivid0-scribe1) vivid; urgency=high
 
   * custom build of Nginx for Scribe Inc; see README.md for details
 
  -- Rob Frawley 2nd <open@scribe.tools>  Sat, 08 Nov 2014 01:14:47 -0400
 
-nginx (1.7.7-1+trusty0) trusty; urgency=high
+nginx (1.7.7-1+vivid0) vivid; urgency=high
 
   * debian/: Resync with Debian Unstable.
   * Remaining changes:
